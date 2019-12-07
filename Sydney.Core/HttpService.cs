@@ -21,7 +21,6 @@
             while (this.running)
             {
                 HttpListenerContext context = this.httpListener.GetContext();
-                // Dispatch the request using a task.
             }
         }
 
