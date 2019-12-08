@@ -2,10 +2,10 @@
 {
     internal class ParameterRouteNode : RouteNode
     {
-        public ParameterRouteNode(string segment)
+        public ParameterRouteNode(string segment, string parameterName)
             : base(segment)
         {
-            this.ParameterName = segment.Substring(1, segment.Length - 2);
+            this.ParameterName = parameterName;
         }
 
         public string ParameterName { get; }

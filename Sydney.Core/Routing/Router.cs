@@ -1,6 +1,7 @@
 ﻿namespace Sydney.Core.Routing
 {
     using System;
+    using System.Collections.Generic;
 
     internal class Router
     {
@@ -21,6 +22,7 @@
             }
 
             string[] segments = GetSegments(route);
+            HashSet<string> parameterNames = new HashSet<string>();
             RouteNode current = this.root;
             for (int i = 0; i < segments.Length; i++)
             {
@@ -31,9 +33,15 @@
                 }
 
                 RouteNode child;
-                if (IsPathParameter(segment))
+                if (TryGetParameterName(segment, out string parameterName))
                 {
-                    child = new ParameterRouteNode(segment);
+                    if (parameterNames.Contains(parameterName))
+                    {
+                        throw new ArgumentException("Routes cannot use the same parameter name twice.", nameof(route));
+                    }
+
+                    parameterNames.Add(parameterName);
+                    child = new ParameterRouteNode(segment, parameterName);
                 }
                 else
                 {
@@ -98,9 +106,17 @@
             return route.Trim('/').Split('/');
         }
 
-        private static bool IsPathParameter(string segment)
+        private static bool TryGetParameterName(string segment, out string parameterName)
         {
-            return segment[0] == '{' && segment[segment.Length - 1] == '}';
+            if (segment[0] == '{' && segment[segment.Length - 1] == '}')
+            {
+                parameterName = segment.Substring(1, segment.Length - 2);
+                return true;
+            }
+
+            parameterName = null;
+
+            return false;
         }
     }
 }
