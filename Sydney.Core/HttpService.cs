@@ -2,16 +2,20 @@
 {
     using System;
     using System.Net;
+    using Sydney.Core.Routing;
 
     public class HttpService : IDisposable
     {
         private readonly HttpListener httpListener;
+
+        private readonly Router router;
 
         private bool running = false;
 
         public HttpService()
         {
             this.httpListener = new HttpListener();
+            this.router = new Router();
         }
 
         public void Start()
@@ -31,6 +35,16 @@
             {
                 this.httpListener.Stop();
             }
+        }
+
+        public void AddRoute(string route, RestHandlerBase handler)
+        {
+            this.router.AddRoute(route, handler);
+        }
+
+        public RestHandlerBase Match(string path)
+        {
+            return this.router.Match(path);
         }
 
         public void Dispose()

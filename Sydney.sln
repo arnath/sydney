@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sydney.Core", "Sydney.Core\Sydney.Core.csproj", "{6AF0752F-7631-4532-912E-288498D9A91F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sydney.Core", "Sydney.Core\Sydney.Core.csproj", "{6AF0752F-7631-4532-912E-288498D9A91F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sydney.SampleService", "Sydney.SampleService\Sydney.SampleService.csproj", "{8D549D1A-9D0E-4928-8B88-51EA9713B12D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{6AF0752F-7631-4532-912E-288498D9A91F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6AF0752F-7631-4532-912E-288498D9A91F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6AF0752F-7631-4532-912E-288498D9A91F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D549D1A-9D0E-4928-8B88-51EA9713B12D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D549D1A-9D0E-4928-8B88-51EA9713B12D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D549D1A-9D0E-4928-8B88-51EA9713B12D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D549D1A-9D0E-4928-8B88-51EA9713B12D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

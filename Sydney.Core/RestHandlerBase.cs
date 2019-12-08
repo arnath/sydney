@@ -4,11 +4,11 @@
     using System.Net;
     using System.Threading.Tasks;
 
-    public abstract class ResourceBase
+    public abstract class RestHandlerBase
     {
         internal Task HandleRequestAsync(HttpListenerContext context)
         {
-            if (!Enum.TryParse<HttpMethod>(context.Request.HttpMethod, out HttpMethod httpMethod))
+            if (!Enum.TryParse(context.Request.HttpMethod, out HttpMethod httpMethod))
             {
                 // TODO: Do something.
                 return Task.CompletedTask;
