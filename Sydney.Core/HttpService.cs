@@ -42,7 +42,7 @@
             this.router.AddRoute(route, handler);
         }
 
-        public RestHandlerBase Match(string path)
+        public RouteMatch Match(string path)
         {
             return this.router.Match(path);
         }

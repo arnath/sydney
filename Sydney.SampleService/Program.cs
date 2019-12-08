@@ -1,7 +1,9 @@
 ﻿namespace Sydney.SampleService
 {
     using System;
+    using System.Linq;
     using Sydney.Core;
+    using Sydney.Core.Routing;
 
     public class Program
     {
@@ -19,8 +21,14 @@
 
         private static void MatchAndPrint(HttpService service, string path)
         {
-            RestHandlerBase handler = service.Match(path);
-            Console.WriteLine($"{path}: {(handler != null ? handler.ToString() : "null")}");
+            RouteMatch match = service.Match(path);
+            string output = "null";
+            if (match != null)
+            {
+                output = $"handler: {match.Handler}, parameters: {string.Join(';', match.PathParameters.Select(kvp => $"{kvp.Key}={kvp.Value}"))}";
+            }
+
+            Console.WriteLine($"{path} -> {output}");
         }
 
         private class DummyHandler : RestHandlerBase

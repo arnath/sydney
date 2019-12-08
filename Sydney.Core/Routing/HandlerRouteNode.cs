@@ -8,6 +8,12 @@
             this.Handler = handler;
         }
 
+        public HandlerRouteNode(RestHandlerBase handler, RouteNode parent)
+            : base(Router.EmptySegment, parent)
+        {
+            this.Handler = handler;
+        }
+
         public RestHandlerBase Handler { get; set; }
     }
 }

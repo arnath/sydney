@@ -23,7 +23,7 @@
 
             string[] segments = GetSegments(route);
             HashSet<string> parameterNames = new HashSet<string>();
-            RouteNode current = this.root;
+            RouteNode node = this.root;
             for (int i = 0; i < segments.Length; i++)
             {
                 string segment = segments[i];
@@ -41,64 +41,61 @@
                     }
 
                     parameterNames.Add(parameterName);
-                    child = new ParameterRouteNode(segment, parameterName);
+                    child = new ParameterRouteNode(segment, parameterName, node);
                 }
                 else
                 {
-                    child = new RouteNode(segment);
+                    child = new RouteNode(segment, node);
                 }
 
-                current.Children.Add(child);
-                current = child;
+                node.Children.Add(child);
+                node = child;
             }
 
-            current.Children.Add(new HandlerRouteNode(handler));
+            node.Children.Add(new HandlerRouteNode(handler, node));
         }
 
-        public RestHandlerBase Match(string path)
+        public RouteMatch Match(string path)
         {
-            return this.RecursiveMatch(this.root, GetSegments(path), -1);
-        }
-
-        private RestHandlerBase RecursiveMatch(RouteNode node, string[] segments, int index)
-        {
-            switch (node)
+            string[] segments = GetSegments(path);
+            HandlerRouteNode handlerNode = this.RecursiveMatch(this.root, segments, -1);
+            if (handlerNode != null)
             {
-                case HandlerRouteNode handlerNode:
-                    if (index == segments.Length)
+                Dictionary<string, string> pathParameters = new Dictionary<string, string>();
+                RouteNode node = handlerNode.Parent;
+                for (int i = segments.Length - 1; i >= 0 && node.Parent != null; i--, node = node.Parent)
+                {
+                    if (node is ParameterRouteNode parameterNode)
                     {
-                        return handlerNode.Handler;
+                        pathParameters.Add(parameterNode.ParameterName, segments[i]);
                     }
+                }
 
-                    return null;
-
-                case ParameterRouteNode parameterNode:
-                    foreach (RouteNode child in parameterNode.Children)
-                    {
-                        RestHandlerBase handler = this.RecursiveMatch(child, segments, index + 1);
-                        if (handler != null)
-                        {
-                            return handler;
-                        }
-                    }
-
-                    return null;
-
-                default:
-                    if (node == this.root || node.Segment.Equals(segments[index], StringComparison.OrdinalIgnoreCase))
-                    {
-                        foreach (RouteNode child in node.Children)
-                        {
-                            RestHandlerBase handler = this.RecursiveMatch(child, segments, index + 1);
-                            if (handler != null)
-                            {
-                                return handler;
-                            }
-                        }
-                    }
-
-                    return null;
+                return new RouteMatch(handlerNode.Handler, pathParameters);
             }
+
+            return null;
+        }
+
+        private HandlerRouteNode RecursiveMatch(RouteNode node, string[] segments, int index)
+        {
+            if (node is HandlerRouteNode handlerNode && index == segments.Length)
+            {
+                return handlerNode;
+            }
+            else if (node is ParameterRouteNode || node.Parent == null || node.Segment.Equals(segments[index], StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (RouteNode child in node.Children)
+                {
+                    handlerNode = this.RecursiveMatch(child, segments, index + 1);
+                    if (handlerNode != null)
+                    {
+                        return handlerNode;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private static string[] GetSegments(string route)

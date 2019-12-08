@@ -16,8 +16,16 @@
             this.Children = new List<RouteNode>();
         }
 
+        public RouteNode(string segment, RouteNode parent)
+            : this(segment)
+        {
+            this.Parent = parent;
+        }
+
         public string Segment { get; }
 
         public IList<RouteNode> Children { get; }
+
+        public RouteNode Parent { get; }
     }
 }
