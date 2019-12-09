@@ -74,6 +74,7 @@
             }
             catch (Exception exception)
             {
+                // TODO: Get the payload as a string to give back in the message.
                 throw new HttpResponseException(
                     HttpStatusCode.BadRequest,
                     "Failed to deserialize request payload. See inner exception for details.",
