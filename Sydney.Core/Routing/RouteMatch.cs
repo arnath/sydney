@@ -2,8 +2,7 @@
 {
     using System.Collections.Generic;
 
-    // TODO: Make this internal once there's some kind of context or request class.
-    public class RouteMatch
+    internal struct RouteMatch
     {
         public RouteMatch(RestHandlerBase handler, Dictionary<string, string> pathParameters)
         {

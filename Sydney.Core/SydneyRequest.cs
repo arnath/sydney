@@ -15,17 +15,24 @@
 
         private readonly Dictionary<Type, object> deserializedPayloads = new Dictionary<Type, object>();
 
-        public SydneyRequest(HttpListenerRequest httpListenerRequest)
+        public SydneyRequest(HttpListenerRequest httpListenerRequest, IDictionary<string, string> pathParameters)
         {
             this.httpListenerRequest = httpListenerRequest ?? throw new ArgumentNullException(nameof(httpListenerRequest));
-            
+            this.PathParameters = pathParameters ?? throw new ArgumentNullException(nameof(pathParameters));
+
             if (!Enum.TryParse(httpListenerRequest.HttpMethod, out HttpMethod httpMethod))
             {
                 throw new ArgumentException(
                     $"Request has an unsupported HTTP method {httpListenerRequest.HttpMethod}.",
                     nameof(httpListenerRequest));
             }
+
+            this.HttpMethod = httpMethod;
         }
+
+        public HttpMethod HttpMethod { get; }
+
+        public IDictionary<string, string> PathParameters { get; }
 
         public bool IsHttps => this.httpListenerRequest.IsSecureConnection;
 
@@ -33,15 +40,13 @@
 
         public NameValueCollection Headers => this.httpListenerRequest.Headers;
 
-        public NameValueCollection QueryString => this.httpListenerRequest.QueryString;
+        public NameValueCollection QueryParameters => this.httpListenerRequest.QueryString;
 
-        public bool IsPersistentConnection => this.httpListenerRequest.KeepAlive;
+        public bool KeepAlive => this.httpListenerRequest.KeepAlive;
 
         public bool IsWebSocketRequest => this.httpListenerRequest.IsWebSocketRequest;
 
         public string[] UserLanguages => this.httpListenerRequest.UserLanguages;
-
-        public HttpMethod HttpMethod { get; }
 
         public bool HasEntityBody => this.httpListenerRequest.HasEntityBody;
 
@@ -51,12 +56,15 @@
 
         public long ContentLength => this.httpListenerRequest.ContentLength64;
 
-        public Encoding ContentEncoding => this.httpListenerRequest.ContentEncoding;
-
         public Stream PayloadStream => this.httpListenerRequest.InputStream;
 
         public async Task<TPayload> DeserializePayloadAsync<TPayload>()
         {
+            if (!this.HasEntityBody)
+            {
+                throw new InvalidOperationException("Cannot deserialize payload because there is no entity body.");
+            }
+
             try
             {
                 Type payloadType = typeof(TPayload);

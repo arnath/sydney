@@ -22,14 +22,14 @@
 
         private static void MatchAndPrint(HttpService service, string path)
         {
-            RouteMatch match = service.Match(path);
-            string output = "null";
-            if (match != null)
-            {
-                output = $"handler: {match.Handler}, parameters: {string.Join(';', match.PathParameters.Select(kvp => $"{kvp.Key}={kvp.Value}"))}";
-            }
+            ////RouteMatch match = service.Match(path);
+            ////string output = "null";
+            ////if (match != null)
+            ////{
+            ////    output = $"handler: {match.Handler}, parameters: {string.Join(';', match.PathParameters.Select(kvp => $"{kvp.Key}={kvp.Value}"))}";
+            ////}
 
-            Console.WriteLine($"{path} -> {output}");
+            ////Console.WriteLine($"{path} -> {output}");
         }
 
         private class DummyHandler : RestHandlerBase

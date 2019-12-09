@@ -2,6 +2,7 @@
 {
     using System;
     using System.Net;
+    using System.Threading.Tasks;
     using Sydney.Core.Routing;
 
     public class HttpService : IDisposable
@@ -25,6 +26,7 @@
             while (this.running)
             {
                 HttpListenerContext context = this.httpListener.GetContext();
+                Task.Run(() => this.HandleContextAsync(context));
             }
         }
 
@@ -42,11 +44,6 @@
             this.router.AddRoute(route, handler);
         }
 
-        public RouteMatch Match(string path)
-        {
-            return this.router.Match(path);
-        }
-
         public void Dispose()
         {
             this.Dispose(true);
@@ -62,6 +59,22 @@
                     this.httpListener.Close();
                 }
             }
+        }
+
+        private async Task HandleContextAsync(HttpListenerContext context)
+        {
+            if (!this.router.TryMatchPath(context.Request.Url.AbsolutePath, out RouteMatch match))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                context.Response.Close();
+
+                return;
+            }
+
+            SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
+            SydneyResponse response = await match.Handler.HandleRequestAsync(request);
+
+            // TODO: Write response to context.Response.
         }
     }
 }

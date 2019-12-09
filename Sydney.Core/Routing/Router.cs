@@ -16,7 +16,7 @@
 
         public void AddRoute(string route, RestHandlerBase handler)
         {
-            if (this.Match(route) != null)
+            if (this.TryMatchPath(route, out _))
             {
                 throw new ArgumentException("There is already a registered handler for this route.", nameof(route));
             }
@@ -55,8 +55,9 @@
             node.Children.Add(new HandlerRouteNode(handler, node));
         }
 
-        public RouteMatch Match(string path)
+        public bool TryMatchPath(string path, out RouteMatch match)
         {
+            match = default;
             string[] segments = GetSegments(path);
             HandlerRouteNode handlerNode = this.RecursiveMatch(this.root, segments, -1);
             if (handlerNode != null)
@@ -71,10 +72,11 @@
                     }
                 }
 
-                return new RouteMatch(handlerNode.Handler, pathParameters);
+                match = new RouteMatch(handlerNode.Handler, pathParameters);
+                return true;
             }
 
-            return null;
+            return false;
         }
 
         private HandlerRouteNode RecursiveMatch(RouteNode node, string[] segments, int index)
