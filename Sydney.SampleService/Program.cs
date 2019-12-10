@@ -1,32 +1,22 @@
 ﻿namespace Sydney.SampleService
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
+    using System.Threading.Tasks;
     using Sydney.Core;
-    using Sydney.Core.Routing;
     using Utf8Json;
 
     public class Program
     {
         public static void Main()
         {
-            ////SydneyService service = new SydneyService();
-            ////service.AddRoute("/users/{user}/accounts", new DummyHandler("accounts"));
-            ////service.AddRoute("/users/{user}/jobs/{job}", new DummyHandler("jobs"));
-
-            ////MatchAndPrint(service, "/users/123/accounts");
-            ////MatchAndPrint(service, "/users/123/accounts/asdf");
-            ////MatchAndPrint(service, "/users/123/jobs/asdf");
-            ////MatchAndPrint(service, "/");
-
-            string scheme = "https";
-            string host = "vijayp.dev";
-            ushort port = 123;
-            string fullPrefixFormat = $"{scheme}://{host}:{port}/{{0}}";
-            Console.WriteLine(fullPrefixFormat);
-            Console.WriteLine(string.Format(fullPrefixFormat, "accounts/"));
+            SydneyServiceConfig config = new SydneyServiceConfig("http", "*", 8080, returnExceptionMessagesInResponse: true);
+            using (SydneyService service = new SydneyService(config, new ConsoleLogger()))
+            {
+                service.AddRoute("/accounts/", new DummyHandler("accounts"));
+                service.AddRoute("/accounts/{id}", new DummyHandler("accounts/{id}"));
+                service.Start();
+            }
         }
 
         private static void MatchAndPrint(SydneyService service, string path)
@@ -48,11 +38,19 @@
                 this.Name = name;
             }
 
-            public string Name { get; }
+            public string Name { get; set; }
 
-            public override string ToString()
+            protected override async Task<SydneyResponse> PostAsync(SydneyRequest request)
             {
-                return this.Name;
+                dynamic payload = request.DeserializePayloadAsync<dynamic>();
+                Console.WriteLine($"POST request to {this.Name}, body: {JsonSerializer.ToJsonString(payload)}");
+                return new SydneyResponse(HttpStatusCode.OK);
+            }
+
+            protected override async Task<SydneyResponse> GetAsync(SydneyRequest request)
+            {
+                Console.WriteLine("GET request to {this.Name}");
+                return new SydneyResponse(HttpStatusCode.OK);
             }
         }
     }

@@ -42,7 +42,7 @@
 
         public void Start()
         {
-            this.logger.LogInformation("Starting service, press Ctrl-C to stop.");
+            this.logger.LogInformation("Starting service, press Ctrl-C to stop ...");
             this.running = true;
 
             // Add prefixes.
@@ -55,6 +55,9 @@
             // Start the listener.
             this.httpListener.Start();
 
+            // Set up Ctrl+Break and Ctrl-C handler.
+            Console.CancelKeyPress += this.HandleControlC;
+
             // Use a single thread to listen for contexts and dispatch using tasks.
             // TODO: Add a limit on the max number of outstanding requests.
             while (this.running)
@@ -64,13 +67,26 @@
             }
         }
 
+        private void HandleControlC(object sender, ConsoleCancelEventArgs e)
+        {
+            this.Stop();
+
+            // Stop the Ctrl+C or Ctrl+Break command from terminating the server immediately.
+            e.Cancel = true;
+        }
+
         public void Stop()
         {
+            this.logger.LogInformation("Stopping service ...");
+
             this.running = false;
             if (this.httpListener.IsListening)
             {
                 this.httpListener.Stop();
             }
+
+            // TODO: Wait for a while before calling close and probably don't do it here.
+            this.httpListener.Close();
         }
 
         public void AddRoute(string route, RestHandlerBase handler)
@@ -118,41 +134,48 @@
 
         private async Task HandleContextAsync(HttpListenerContext context)
         {
-            // Try to match the incoming URL to a handler.
-            if (!this.router.TryMatchPath(context.Request.Url.AbsolutePath, out RouteMatch match))
+            try
             {
-                this.logger.LogWarning($"No matching handler found for incoming request url: {context.Request.Url}.");
+                // Try to match the incoming URL to a handler.
+                if (!this.router.TryMatchPath(context.Request.Url.AbsolutePath, out RouteMatch match))
+                {
+                    this.logger.LogWarning($"No matching handler found for incoming request url: {context.Request.Url}.");
 
-                // If we couldn't, return a 404.
-                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                    // If we couldn't, return a 404.
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                    context.Response.Close();
+
+                    return;
+                }
+
+                // Create and handle the request.
+                SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
+                SydneyResponse response =
+                    await match.Handler.HandleRequestAsync(
+                        request,
+                        this.logger,
+                        this.config.ReturnExceptionMessagesInResponse);
+
+                // Write the response to context.Response.
+                context.Response.StatusCode = (int)response.StatusCode;
+                context.Response.KeepAlive = response.KeepAlive;
+                foreach (KeyValuePair<string, string> header in response.Headers)
+                {
+                    context.Response.AddHeader(header.Key, header.Value);
+                }
+
+                if (response.Payload != null)
+                {
+                    await JsonSerializer.SerializeAsync(context.Response.OutputStream, response.Payload);
+                }
+
+                // Close the response to send it back to the client.
                 context.Response.Close();
-
-                return;
             }
-
-            // Create and handle the request.
-            SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
-            SydneyResponse response = 
-                await match.Handler.HandleRequestAsync(
-                    request, 
-                    this.logger,
-                    this.config.ReturnExceptionMessagesInResponse);
-
-            // Write the response to context.Response.
-            context.Response.StatusCode = (int)response.StatusCode;
-            context.Response.KeepAlive = response.KeepAlive;
-            foreach (KeyValuePair<string, string> header in response.Headers)
+            catch (Exception exc)
             {
-                context.Response.AddHeader(header.Key, header.Value);
+                Console.WriteLine(exc);
             }
-
-            if (response.Payload != null)
-            {
-                await JsonSerializer.SerializeAsync(context.Response.OutputStream, response.Payload);
-            }
-
-            // Close the response to send it back to the client.
-            context.Response.Close();
         }
     }
 }

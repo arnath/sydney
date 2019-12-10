@@ -26,7 +26,7 @@
 
             // As we try to add the route, also keep track of the longest prefix
             // that we can register with the HTTP listener.
-            string longestPrefix = null;
+            bool foundParameterNode = false;
             StringBuilder longestPrefixBuilder = new StringBuilder(route.Length);
 
             // Split route into segments.
@@ -54,19 +54,13 @@
                     parameterNames.Add(parameterName);
                     child = new ParameterRouteNode(segment, parameterName, node);
 
-                    if (longestPrefix == null)
-                    {
-                        // If we reach a path parameter, cut off the longest prefix if we
-                        // haven't already done so.
-                        longestPrefix = longestPrefixBuilder.ToString();
-                        longestPrefixBuilder = null;
-                    }
+                    foundParameterNode = true;
                 }
                 else
                 {
                     child = new RouteNode(segment, node);
 
-                    if (longestPrefix == null)
+                    if (!foundParameterNode)
                     {
                         // Append the segment to the longest prefix if we haven't already
                         // cut it off.
@@ -82,7 +76,7 @@
             // Add a handler node as a leaf below the last route node.
             node.Children.Add(new HandlerRouteNode(handler, node));
 
-            return longestPrefix;
+            return longestPrefixBuilder.ToString();
         }
 
         public bool TryMatchPath(string path, out RouteMatch match)

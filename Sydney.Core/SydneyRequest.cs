@@ -20,7 +20,7 @@
             this.httpListenerRequest = httpListenerRequest ?? throw new ArgumentNullException(nameof(httpListenerRequest));
             this.PathParameters = pathParameters ?? throw new ArgumentNullException(nameof(pathParameters));
 
-            if (!Enum.TryParse(httpListenerRequest.HttpMethod, out HttpMethod httpMethod))
+            if (!Enum.TryParse(httpListenerRequest.HttpMethod, true, out HttpMethod httpMethod))
             {
                 throw new ArgumentException(
                     $"Request has an unsupported HTTP method {httpListenerRequest.HttpMethod}.",
@@ -73,7 +73,11 @@
                     return (TPayload)value;
                 }
 
-                this.PayloadStream.Seek(0, SeekOrigin.Begin);
+                if (this.PayloadStream.CanSeek)
+                {
+                    this.PayloadStream.Seek(0, SeekOrigin.Begin);
+                }
+
                 TPayload payload = await JsonSerializer.DeserializeAsync<TPayload>(this.PayloadStream);
 
                 deserializedPayloads[payloadType] = payload;
