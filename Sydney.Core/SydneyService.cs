@@ -62,8 +62,30 @@
             // TODO: Add a limit on the max number of outstanding requests.
             while (this.running)
             {
-                HttpListenerContext context = this.httpListener.GetContext();
-                Task.Run(() => this.HandleContextAsync(context));
+                // .NET Core has a bug where GetContext hangs when the listener is closed so we have to 
+                // use GetContextAsync. 
+                try
+                {
+                    HttpListenerContext context = this.httpListener.GetContextAsync().Result;
+                    Task.Run(() => this.HandleContextAsync(context));
+                }
+                catch (Exception exception)
+                {
+                    if (!this.running)
+                    {
+                        // When we all HttpListener.Stop(), an HttpListenerException is thrown (wrapped in
+                        // an AggregateException).
+                        this.logger.LogInformation("Listener stopped.");
+                    }
+                    else
+                    {
+                        this.logger.LogError(
+                            exception,
+                            $"Listener terminated by unexpected exception: {exception.Message}.");
+                    }
+
+                    break;
+                }
             }
         }
 
@@ -84,9 +106,6 @@
             {
                 this.httpListener.Stop();
             }
-
-            // TODO: Wait for a while before calling close and probably don't do it here.
-            this.httpListener.Close();
         }
 
         public void AddRoute(string route, RestHandlerBase handler)
