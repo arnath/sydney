@@ -4,12 +4,15 @@
     using System.Collections.Generic;
     using System.Net;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
     using Sydney.Core.Routing;
     using Utf8Json;
 
     public class SydneyService : IDisposable
     {
         private readonly SydneyServiceConfig config;
+        private readonly ILogger logger;
         private readonly HttpListener httpListener;
         private readonly Router router;
 
@@ -19,8 +22,15 @@
         private bool running = false;
 
         public SydneyService(SydneyServiceConfig config)
+            : this(config, NullLogger.Instance)
+        {
+        }
+
+        public SydneyService(SydneyServiceConfig config, ILogger logger)
         {
             this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
             config.Validate();
 
             this.httpListener = new HttpListener();
@@ -32,12 +42,14 @@
 
         public void Start()
         {
+            this.logger.LogInformation("Starting service, press Ctrl-C to stop.");
             this.running = true;
 
             // Add prefixes.
             foreach (string prefix in this.prefixes)
             {
                 this.httpListener.Prefixes.Add(prefix);
+                this.logger.LogInformation($"Listening on prefix: {prefix}");
             }
 
             // Start the listener.
@@ -109,6 +121,8 @@
             // Try to match the incoming URL to a handler.
             if (!this.router.TryMatchPath(context.Request.Url.AbsolutePath, out RouteMatch match))
             {
+                this.logger.LogWarning($"No matching handler found for incoming request url: {context.Request.Url}.");
+
                 // If we couldn't, return a 404.
                 context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                 context.Response.Close();
@@ -118,7 +132,11 @@
 
             // Create and handle the request.
             SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
-            SydneyResponse response = await match.Handler.HandleRequestAsync(request);
+            SydneyResponse response = 
+                await match.Handler.HandleRequestAsync(
+                    request, 
+                    this.logger,
+                    this.config.ReturnExceptionMessagesInResponse);
 
             // Write the response to context.Response.
             context.Response.StatusCode = (int)response.StatusCode;

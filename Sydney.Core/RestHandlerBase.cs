@@ -1,54 +1,88 @@
 ﻿namespace Sydney.Core
 {
+    using Microsoft.Extensions.Logging;
     using System;
+    using System.Diagnostics;
     using System.Net;
     using System.Threading.Tasks;
 
     public abstract class RestHandlerBase
     {
-        internal async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
+        internal async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, ILogger logger, bool returnExceptionMessagesInResponse)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             try
             {
+                SydneyResponse response = null;
                 switch (request.HttpMethod)
                 {
                     case HttpMethod.Get:
-                        return await this.GetAsync(request);
+                        response = await this.GetAsync(request);
+                        break;
 
                     case HttpMethod.Post:
-                        return await this.PostAsync(request);
+                        response = await this.PostAsync(request);
+                        break;
 
                     case HttpMethod.Delete:
-                        return await this.DeleteAsync(request);
+                        response = await this.DeleteAsync(request);
+                        break;
 
                     case HttpMethod.Put:
-                        return await this.PutAsync(request);
+                        response = await this.PutAsync(request);
+                        break;
 
                     case HttpMethod.Head:
-                        return await this.HeadAsync(request);
+                        response = await this.HeadAsync(request);
+                        break;
 
                     case HttpMethod.Patch:
-                        return await this.PatchAsync(request);
+                        response = await this.PatchAsync(request);
+                        break;
 
                     case HttpMethod.Options:
-                        return await this.OptionsAsync(request);
+                        response = await this.OptionsAsync(request);
+                        break;
 
                     default:
                         throw new NotImplementedException();
                 }
+
+                logger.LogInformation($"Request completed after {stopwatch.Elapsed}, status code: {response.StatusCode}.");
+
+                return response;
             }
-            catch (HttpResponseException hre)
+            catch (Exception exception)
             {
-                return new SydneyResponse(hre.StatusCode, hre.SendErrorMessage ? hre.Message : null);
-            }
-            catch (NotImplementedException)
-            {
-                return new SydneyResponse(HttpStatusCode.MethodNotAllowed);
-            }
-            catch (Exception)
-            {
-                // TODO: Add logging here.
-                return new SydneyResponse(HttpStatusCode.InternalServerError);
+                HttpStatusCode statusCode = HttpStatusCode.InternalServerError;
+                switch (exception)
+                {
+                    case HttpResponseException hre:
+                        logger.LogWarning(
+                            hre,
+                            $"Request failed after {stopwatch.Elapsed}, status code: {hre.StatusCode}, message: {hre.Message}.");
+                        statusCode = hre.StatusCode;
+                        break;
+
+                    case NotImplementedException nie:
+                        logger.LogWarning(
+                            nie,
+                            $"Request made for unsupported HTTP method {request.HttpMethod}.");
+                        statusCode = HttpStatusCode.MethodNotAllowed;
+                        break;
+
+                    default:
+                        logger.LogError(
+                            exception,
+                            $"Unexpected exception processing request after {stopwatch.Elapsed}, message: {exception.Message}.");
+                        break;
+                }
+
+                return
+                    new SydneyResponse(
+                        statusCode,
+                        returnExceptionMessagesInResponse ? exception.Message : null);
             }
         }
 
