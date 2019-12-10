@@ -5,6 +5,7 @@
     using System.Net;
     using System.Threading.Tasks;
     using Sydney.Core.Routing;
+    using Utf8Json;
 
     public class SydneyService : IDisposable
     {
@@ -119,7 +120,21 @@
             SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
             SydneyResponse response = await match.Handler.HandleRequestAsync(request);
 
-            // TODO: Write response to context.Response.
+            // Write the response to context.Response.
+            context.Response.StatusCode = (int)response.StatusCode;
+            context.Response.KeepAlive = response.KeepAlive;
+            foreach (KeyValuePair<string, string> header in response.Headers)
+            {
+                context.Response.AddHeader(header.Key, header.Value);
+            }
+
+            if (response.Payload != null)
+            {
+                await JsonSerializer.SerializeAsync(context.Response.OutputStream, response.Payload);
+            }
+
+            // Close the response to send it back to the client.
+            context.Response.Close();
         }
     }
 }
