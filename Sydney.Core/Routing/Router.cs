@@ -29,8 +29,7 @@
             bool foundParameterNode = false;
             StringBuilder longestPrefixBuilder = new StringBuilder(route.Length);
 
-            // Split route into segments.
-            string[] segments = route.Split('/');
+            string[] segments = GetUrlSegments(route);
             HashSet<string> parameterNames = new HashSet<string>();
             RouteNode node = this.root;
             for (int i = 0; i < segments.Length; i++)
