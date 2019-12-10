@@ -1,7 +1,9 @@
 ﻿namespace Sydney.SampleService
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using Sydney.Core;
     using Sydney.Core.Routing;
     using Utf8Json;
@@ -10,17 +12,24 @@
     {
         public static void Main()
         {
-            HttpService service = new HttpService();
-            service.AddRoute("/users/{user}/accounts", new DummyHandler("accounts"));
-            service.AddRoute("/users/{user}/jobs/{job}", new DummyHandler("jobs"));
+            ////SydneyService service = new SydneyService();
+            ////service.AddRoute("/users/{user}/accounts", new DummyHandler("accounts"));
+            ////service.AddRoute("/users/{user}/jobs/{job}", new DummyHandler("jobs"));
 
-            MatchAndPrint(service, "/users/123/accounts");
-            MatchAndPrint(service, "/users/123/accounts/asdf");
-            MatchAndPrint(service, "/users/123/jobs/asdf");
-            MatchAndPrint(service, "/");
+            ////MatchAndPrint(service, "/users/123/accounts");
+            ////MatchAndPrint(service, "/users/123/accounts/asdf");
+            ////MatchAndPrint(service, "/users/123/jobs/asdf");
+            ////MatchAndPrint(service, "/");
+
+            string scheme = "https";
+            string host = "vijayp.dev";
+            ushort port = 123;
+            string fullPrefixFormat = $"{scheme}://{host}:{port}/{{0}}";
+            Console.WriteLine(fullPrefixFormat);
+            Console.WriteLine(string.Format(fullPrefixFormat, "accounts/"));
         }
 
-        private static void MatchAndPrint(HttpService service, string path)
+        private static void MatchAndPrint(SydneyService service, string path)
         {
             ////RouteMatch match = service.Match(path);
             ////string output = "null";

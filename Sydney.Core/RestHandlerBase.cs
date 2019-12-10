@@ -37,13 +37,18 @@
                         throw new NotImplementedException();
                 }
             }
+            catch (HttpResponseException hre)
+            {
+                return new SydneyResponse(hre.StatusCode, hre.SendErrorMessage ? hre.Message : null);
+            }
             catch (NotImplementedException)
             {
                 return new SydneyResponse(HttpStatusCode.MethodNotAllowed);
             }
-            catch (HttpResponseException hre)
+            catch (Exception)
             {
-                return new SydneyResponse(hre.StatusCode, hre.SendErrorMessage ? hre.Message : null);
+                // TODO: Add logging here.
+                return new SydneyResponse(HttpStatusCode.InternalServerError);
             }
         }
 
