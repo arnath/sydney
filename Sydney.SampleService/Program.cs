@@ -19,18 +19,6 @@
             }
         }
 
-        private static void MatchAndPrint(SydneyService service, string path)
-        {
-            ////RouteMatch match = service.Match(path);
-            ////string output = "null";
-            ////if (match != null)
-            ////{
-            ////    output = $"handler: {match.Handler}, parameters: {string.Join(';', match.PathParameters.Select(kvp => $"{kvp.Key}={kvp.Value}"))}";
-            ////}
-
-            ////Console.WriteLine($"{path} -> {output}");
-        }
-
         private class DummyHandler : RestHandlerBase
         {
             public DummyHandler(string name)
@@ -44,7 +32,7 @@
             {
                 dynamic payload = request.DeserializePayloadAsync<dynamic>();
                 Console.WriteLine($"POST request to {this.Name}, body: {JsonSerializer.ToJsonString(payload)}");
-                return new SydneyResponse(HttpStatusCode.OK);
+                return new SydneyResponse(HttpStatusCode.OK, payload);
             }
 
             protected override async Task<SydneyResponse> GetAsync(SydneyRequest request)

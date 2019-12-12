@@ -2,8 +2,10 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Net;
     using System.Threading.Tasks;
+
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Sydney.Core.Routing;
@@ -11,6 +13,8 @@
 
     public class SydneyService : IDisposable
     {
+        private const int DefaultBufferSize = 512;
+
         private readonly SydneyServiceConfig config;
         private readonly ILogger logger;
         private readonly HttpListener httpListener;
@@ -185,7 +189,22 @@
 
                 if (response.Payload != null)
                 {
-                    await JsonSerializer.SerializeAsync(context.Response.OutputStream, response.Payload);
+                    // We have to serialize to a memory stream first in order to get the content length
+                    // because the output stream does not support the property. It seems good to initialize the
+                    // stream with a buffer size. 512 bytes was randomly chosen as a decent medium size for now. 
+                    using (var memoryStream = new MemoryStream(DefaultBufferSize))
+                    {
+                        await JsonSerializer.SerializeAsync(memoryStream, response.Payload);
+                        context.Response.ContentLength64 = memoryStream.Length;
+
+                        // Stream.CopyToAsync starts from the current position so seek to the beginning.
+                        memoryStream.Seek(0, SeekOrigin.Begin);
+                        await memoryStream.CopyToAsync(context.Response.OutputStream);
+                    }
+                }
+                else
+                {
+                    context.Response.ContentLength64 = 0;
                 }
 
                 // Close the response to send it back to the client.

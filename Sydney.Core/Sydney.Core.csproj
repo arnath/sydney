@@ -3,6 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Version>0.1.1</Version>
+    <Authors>Vijay Prakash</Authors>
+    <Company />
+    <Product>Sydney HTTP Framework</Product>
+    <RepositoryUrl>https://github.com/arnath/sydney</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>Sydney HTTP Framework</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +26,13 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.0" />
     <PackageReference Include="Utf8Json" Version="1.3.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
