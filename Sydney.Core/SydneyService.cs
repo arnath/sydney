@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Net;
+    using System.Net.Mime;
     using System.Threading.Tasks;
 
     using Microsoft.Extensions.Logging;
@@ -189,6 +190,8 @@
 
                 if (response.Payload != null)
                 {
+                    context.Response.ContentType = MediaTypeNames.Application.Json;
+
                     // We have to serialize to a memory stream first in order to get the content length
                     // because the output stream does not support the property. It seems good to initialize the
                     // stream with a buffer size. 512 bytes was randomly chosen as a decent medium size for now. 
@@ -210,9 +213,14 @@
                 // Close the response to send it back to the client.
                 context.Response.Close();
             }
-            catch (Exception exc)
+            catch (Exception exception)
             {
-                Console.WriteLine(exc);
+                this.logger.LogError(
+                    exception,
+                    $"Unexpected exception handling context, exception: {exception}");
+
+                // Forcefully end the connection.
+                context.Response.Abort();
             }
         }
     }

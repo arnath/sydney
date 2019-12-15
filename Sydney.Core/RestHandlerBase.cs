@@ -61,7 +61,7 @@
                     case HttpResponseException hre:
                         logger.LogWarning(
                             hre,
-                            $"Request failed after {stopwatch.Elapsed}, status code: {hre.StatusCode}, message: {hre.Message}.");
+                            $"Request failed after {stopwatch.Elapsed}, status code: {hre.StatusCode}, exception: {hre}");
                         statusCode = hre.StatusCode;
                         break;
 
@@ -75,7 +75,7 @@
                     default:
                         logger.LogError(
                             exception,
-                            $"Unexpected exception processing request after {stopwatch.Elapsed}, message: {exception.Message}.");
+                            $"Unexpected exception processing request after {stopwatch.Elapsed}, exception: {exception}");
                         break;
                 }
 
