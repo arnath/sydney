@@ -16,7 +16,7 @@
         }
 
         public HttpResponseException(string message, Exception innerException)
-            : this(HttpStatusCode.OK, message, innerException)
+            : this(HttpStatusCode.InternalServerError, message, innerException)
         {
         }
 
