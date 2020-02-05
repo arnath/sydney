@@ -21,7 +21,15 @@ public class BooksHandler : RestHandlerBase
     // will return HTTP 405).
     protected override async Task<SydneyResponse> GetAsync(SydneyRequest request)
     {
-        dynamic payload = new { books = new[] { "The Fellowship of the Ring", "The Two Towers" } };
+        dynamic payload = new 
+        { 
+            books = new[] 
+            { 
+                "The Fellowship of the Ring", 
+                "The Two Towers",
+                "The Return of the King" 
+            } 
+        };
         
         // Handlers must either return a SydneyResponse or throw an exception.
         // A SydneyResponse contains an HttpStatusCode and an optional payload
