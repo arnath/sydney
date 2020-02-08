@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using System.Net;
 
-    public class SydneyResponse
+    public class SydneyResponse : ISydneyResponse
     {
         public SydneyResponse()
         {

@@ -8,13 +8,13 @@
 
     public abstract class RestHandlerBase
     {
-        internal async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, ILogger logger, bool returnExceptionMessagesInResponse)
+        internal async Task<ISydneyResponse> HandleRequestAsync(ISydneyRequest request, ILogger logger, bool returnExceptionMessagesInResponse)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             try
             {
-                SydneyResponse response = null;
+                ISydneyResponse response = null;
                 switch (request.HttpMethod)
                 {
                     case HttpMethod.Get:
@@ -86,18 +86,18 @@
             }
         }
 
-        protected virtual Task<SydneyResponse> GetAsync(SydneyRequest request) => throw new NotImplementedException();
+        protected virtual Task<ISydneyResponse> GetAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> PostAsync(SydneyRequest request) => throw new NotImplementedException();
+        protected virtual Task<ISydneyResponse> PostAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) => throw new NotImplementedException();
+        protected virtual Task<ISydneyResponse> DeleteAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> PutAsync(SydneyRequest request) => throw new NotImplementedException();
+        protected virtual Task<ISydneyResponse> PutAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> HeadAsync(SydneyRequest request) => throw new NotImplementedException();
+        protected virtual Task<ISydneyResponse> HeadAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> PatchAsync(SydneyRequest request) => throw new NotImplementedException();
+        protected virtual Task<ISydneyResponse> PatchAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> OptionsAsync(SydneyRequest request) => throw new NotImplementedException();
+        protected virtual Task<ISydneyResponse> OptionsAsync(ISydneyRequest request) => throw new NotImplementedException();
     }
 }

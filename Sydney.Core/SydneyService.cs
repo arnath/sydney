@@ -173,8 +173,8 @@
                 }
 
                 // Create and handle the request.
-                SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
-                SydneyResponse response =
+                ISydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
+                ISydneyResponse response =
                     await match.Handler.HandleRequestAsync(
                         request,
                         this.logger,

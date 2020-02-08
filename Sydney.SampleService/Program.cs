@@ -28,7 +28,7 @@
         {
             // Override the functions for the HTTP methods you want to handle (the rest 
             // will return HTTP 405).
-            protected override async Task<SydneyResponse> GetAsync(SydneyRequest request)
+            protected override async Task<ISydneyResponse> GetAsync(ISydneyRequest request)
             {
                 dynamic payload = new
                 {
@@ -46,7 +46,7 @@
                 return new SydneyResponse(HttpStatusCode.OK, payload);
             }
 
-            protected override async Task<SydneyResponse> PostAsync(SydneyRequest request)
+            protected override async Task<ISydneyResponse> PostAsync(ISydneyRequest request)
             {
                 // You can deserialize a request payload by calling request.DeserializePayloadAsync<T>().
                 // This will deserialize a JSON payload into whatever type you have defined. 

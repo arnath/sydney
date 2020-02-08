@@ -5,11 +5,10 @@
     using System.Collections.Specialized;
     using System.IO;
     using System.Net;
-    using System.Text;
     using System.Threading.Tasks;
     using Utf8Json;
 
-    public class SydneyRequest
+    public class SydneyRequest : ISydneyRequest
     {
         private readonly HttpListenerRequest httpListenerRequest;
 
