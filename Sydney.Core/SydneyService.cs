@@ -21,10 +21,7 @@
         private readonly HttpListener httpListener;
         private readonly Router router;
 
-        private readonly HashSet<string> prefixes;
         private readonly string fullPrefixFormat;
-
-        private bool running = false;
 
         public SydneyService(SydneyServiceConfig config)
             : this(config, NullLogger.Instance)
@@ -41,17 +38,21 @@
             this.httpListener = new HttpListener();
             this.router = new Router();
 
-            this.prefixes = new HashSet<string>();
             this.fullPrefixFormat = $"{config.Scheme}://{config.Host}:{config.Port}/{{0}}";
         }
+
+        // These two values are internal to simplify unit testing.
+        internal HashSet<string> Prefixes { get; } = new HashSet<string>();
+
+        internal bool Running { get; set; } = false;
 
         public void Start()
         {
             this.logger.LogInformation("Starting service, press Ctrl-C to stop ...");
-            this.running = true;
+            this.Running = true;
 
             // Add prefixes.
-            foreach (string prefix in this.prefixes)
+            foreach (string prefix in this.Prefixes)
             {
                 this.httpListener.Prefixes.Add(prefix);
                 this.logger.LogInformation($"Listening on prefix: {prefix}");
@@ -65,7 +66,7 @@
 
             // Use a single thread to listen for contexts and dispatch using tasks.
             // TODO: Add a limit on the max number of outstanding requests.
-            while (this.running)
+            while (this.Running)
             {
                 // .NET Core has a bug where GetContext hangs when the listener is closed so we have to 
                 // use GetContextAsync. 
@@ -76,9 +77,9 @@
                 }
                 catch (Exception exception)
                 {
-                    if (!this.running)
+                    if (!this.Running)
                     {
-                        // When we all HttpListener.Stop(), an HttpListenerException is thrown (wrapped in
+                        // When HttpListener.Stop() is called, an HttpListenerException is thrown (wrapped in
                         // an AggregateException).
                         this.logger.LogInformation("Listener stopped.");
                     }
@@ -106,7 +107,7 @@
         {
             this.logger.LogInformation("Stopping service ...");
 
-            this.running = false;
+            this.Running = false;
             if (this.httpListener.IsListening)
             {
                 this.httpListener.Stop();
@@ -125,7 +126,7 @@
                 throw new ArgumentNullException(nameof(handler));
             }
 
-            if (this.running)
+            if (this.Running)
             {
                 throw new InvalidOperationException("Cannot add a route after the service has been started.");
             }
@@ -136,7 +137,7 @@
             // Keep track of prefixes to register as routes are added.
             string prefixPath = this.router.AddRoute(route, handler);
             string prefix = string.Format(this.fullPrefixFormat, prefixPath);
-            this.prefixes.Add(prefix);
+            this.Prefixes.Add(prefix);
         }
 
         public void Dispose()
@@ -156,7 +157,7 @@
             }
         }
 
-        private async Task HandleContextAsync(HttpListenerContext context)
+        internal async Task HandleContextAsync(HttpListenerContext context)
         {
             try
             {

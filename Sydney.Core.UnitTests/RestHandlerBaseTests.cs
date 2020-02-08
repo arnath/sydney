@@ -5,25 +5,26 @@
     using System.Threading.Tasks;
     using FakeItEasy;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
     using Xunit;
 
     public class RestHandlerBaseTests
     {
         private readonly RestHandlerBase handler;
 
-        private readonly ISydneyRequest fakeRequest;
+        private readonly ISydneyRequest request;
 
-        private readonly ILogger fakeLogger;
+        private readonly ILogger logger;
 
         public RestHandlerBaseTests()
         {
             this.handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
-            this.fakeRequest = A.Fake<ISydneyRequest>();
+            this.request = A.Fake<ISydneyRequest>();
 
-            // We don't test any calls to this because it turns out that
-            // LogInformation, LogWarning, and LogError are extensions so
+            // There are no tests for any calls to this because it turns out that
+            // LogInformation, LogWarning, and LogError are extension methods so
             // they can't be verified usefully.
-            this.fakeLogger = A.Fake<ILogger>();
+            this.logger = NullLogger.Instance;
         }
 
         [Theory]
@@ -40,12 +41,12 @@
                 .Where(call => call.Method.Name == handlerMethodName)
                 .WithReturnType<Task<ISydneyResponse>>()
                 .Returns(Task.FromResult<ISydneyResponse>(new SydneyResponse(HttpStatusCode.Ambiguous)));
-            A.CallTo(() => this.fakeRequest.HttpMethod).Returns(httpMethod);
+            A.CallTo(() => this.request.HttpMethod).Returns(httpMethod);
 
             ISydneyResponse response =
                 this.handler.HandleRequestAsync(
-                    this.fakeRequest,
-                    this.fakeLogger,
+                    this.request,
+                    this.logger,
                     false).Result;
 
             Assert.Equal(HttpStatusCode.Ambiguous, response.StatusCode);
@@ -57,12 +58,12 @@
         [Fact]
         public void UnsupportedHttpMethodReturnsMethodNotAllowed()
         {
-            A.CallTo(() => this.fakeRequest.HttpMethod).Returns(HttpMethod.Get);
+            A.CallTo(() => this.request.HttpMethod).Returns(HttpMethod.Get);
 
             ISydneyResponse response =
                 this.handler.HandleRequestAsync(
-                    this.fakeRequest,
-                    this.fakeLogger,
+                    this.request,
+                    this.logger,
                     false).Result;
 
             Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
@@ -74,12 +75,12 @@
             A.CallTo(this.handler)
                 .Where(call => call.Method.Name == "GetAsync")
                 .Throws(new HttpResponseException(HttpStatusCode.EarlyHints));
-            A.CallTo(() => this.fakeRequest.HttpMethod).Returns(HttpMethod.Get);
+            A.CallTo(() => this.request.HttpMethod).Returns(HttpMethod.Get);
 
             ISydneyResponse response =
                 this.handler.HandleRequestAsync(
-                    this.fakeRequest,
-                    this.fakeLogger,
+                    this.request,
+                    this.logger,
                     false).Result;
 
             Assert.Equal(HttpStatusCode.EarlyHints, response.StatusCode);
@@ -91,12 +92,12 @@
             A.CallTo(this.handler)
                 .Where(call => call.Method.Name == "GetAsync")
                 .Throws(new InvalidOperationException());
-            A.CallTo(() => this.fakeRequest.HttpMethod).Returns(HttpMethod.Get);
+            A.CallTo(() => this.request.HttpMethod).Returns(HttpMethod.Get);
 
             ISydneyResponse response =
                 this.handler.HandleRequestAsync(
-                    this.fakeRequest,
-                    this.fakeLogger,
+                    this.request,
+                    this.logger,
                     false).Result;
 
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
@@ -109,12 +110,12 @@
             A.CallTo(this.handler)
                 .Where(call => call.Method.Name == "GetAsync")
                 .Throws(new InvalidOperationException(expectedExceptionMessage));
-            A.CallTo(() => this.fakeRequest.HttpMethod).Returns(HttpMethod.Get);
+            A.CallTo(() => this.request.HttpMethod).Returns(HttpMethod.Get);
 
             ISydneyResponse response =
                 this.handler.HandleRequestAsync(
-                    this.fakeRequest,
-                    this.fakeLogger,
+                    this.request,
+                    this.logger,
                     true).Result;
 
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);

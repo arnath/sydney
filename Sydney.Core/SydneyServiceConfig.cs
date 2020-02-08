@@ -52,7 +52,7 @@
         /// </summary>
         public bool ReturnExceptionMessagesInResponse { get; set; }
 
-        internal void Validate()
+        internal virtual void Validate()
         {
             if (this.Scheme == null ||
                 (!this.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&

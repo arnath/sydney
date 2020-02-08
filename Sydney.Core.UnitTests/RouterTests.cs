@@ -12,12 +12,12 @@ namespace Sydney.Core.UnitTests
     {
         private readonly Router router;
 
-        private readonly RestHandlerBase fakeHandler;
+        private readonly RestHandlerBase handler;
 
         public RouterTests()
         {
             this.router = new Router();
-            this.fakeHandler = A.Fake<RestHandlerBase>();
+            this.handler = A.Fake<RestHandlerBase>();
         }
 
         [Fact]
@@ -25,7 +25,7 @@ namespace Sydney.Core.UnitTests
         {
             ArgumentException exception = 
                 Assert.Throws<ArgumentException>(
-                    () => this.router.AddRoute("/users//profile", this.fakeHandler));
+                    () => this.router.AddRoute("/users//profile", this.handler));
             Assert.Equal(
                 "Route segments must be at least one character long. (Parameter 'route')",
                 exception.Message);
@@ -36,7 +36,7 @@ namespace Sydney.Core.UnitTests
         {
             ArgumentException exception = 
                 Assert.Throws<ArgumentException>(
-                    () => this.router.AddRoute("/users/{id}/messages/{id}", this.fakeHandler));
+                    () => this.router.AddRoute("/users/{id}/messages/{id}", this.handler));
             Assert.Equal(
                 "Routes cannot use the same parameter name twice. (Parameter 'route')",
                 exception.Message);
@@ -45,7 +45,7 @@ namespace Sydney.Core.UnitTests
         [Fact]
         public void AddRouteTrimsLeadingAndTrailingSlashes()
         {
-            string prefix = this.router.AddRoute("///users///", this.fakeHandler);
+            string prefix = this.router.AddRoute("///users///", this.handler);
             Assert.Equal("users/", prefix);
 
             RouteNode root = GetRouteGraphRoot(this.router);
@@ -53,13 +53,13 @@ namespace Sydney.Core.UnitTests
             Assert.Equal("users", usersNode.Segment);
 
             HandlerRouteNode handlerNode = usersNode.Children.Single() as HandlerRouteNode;
-            Assert.Equal(this.fakeHandler, handlerNode.Handler);
+            Assert.Equal(this.handler, handlerNode.Handler);
         }
 
         [Fact]
         public void AddRouteParameterSegmentEndsPrefix()
         {
-            string prefix = this.router.AddRoute("/system/users/{id}/profile", this.fakeHandler);
+            string prefix = this.router.AddRoute("/system/users/{id}/profile", this.handler);
             Assert.Equal("system/users/", prefix);
 
             RouteNode root = GetRouteGraphRoot(this.router);
@@ -77,16 +77,16 @@ namespace Sydney.Core.UnitTests
             Assert.Equal("profile", node.Segment);
 
             HandlerRouteNode handlerNode = node.Children.Single() as HandlerRouteNode;
-            Assert.Equal(this.fakeHandler, handlerNode.Handler);
+            Assert.Equal(this.handler, handlerNode.Handler);
         }
 
         [Fact]
         public void AddRouteCannotAddDuplicateRoute()
         {
-            this.router.AddRoute("/users/{id}/profile", this.fakeHandler);
+            this.router.AddRoute("/users/{id}/profile", this.handler);
             ArgumentException exception =
                 Assert.Throws<ArgumentException>(
-                    () => this.router.AddRoute("/users/{userid}/profile", this.fakeHandler));
+                    () => this.router.AddRoute("/users/{userid}/profile", this.handler));
             Assert.Equal(
                 "There is already a registered handler for this route. (Parameter 'route')",
                 exception.Message);
@@ -95,32 +95,32 @@ namespace Sydney.Core.UnitTests
         [Fact]
         public void MatchPathDoesNotMatchSubPath()
         {
-            this.router.AddRoute("/three/level/path", this.fakeHandler);
+            this.router.AddRoute("/three/level/path", this.handler);
             Assert.False(this.router.TryMatchPath("/three/level/path/plusone", out _));
         }
 
         [Fact]
         public void MatchPathMatchesExactPath()
         {
-            this.router.AddRoute("/three/level/path", this.fakeHandler);
+            this.router.AddRoute("/three/level/path", this.handler);
             Assert.True(this.router.TryMatchPath("/three/level/path", out RouteMatch match));
-            Assert.Equal(this.fakeHandler, match.Handler);
+            Assert.Equal(this.handler, match.Handler);
             Assert.Equal(0, match.PathParameters.Count);
         }
 
         [Fact]
         public void MatchPathParametersMatchEverything()
         {
-            this.router.AddRoute("/this/{noun}/is/{adj}", this.fakeHandler);
+            this.router.AddRoute("/this/{noun}/is/{adj}", this.handler);
             
             Assert.True(this.router.TryMatchPath("/this/guy/is/wack", out RouteMatch match));
-            Assert.Equal(this.fakeHandler, match.Handler);
+            Assert.Equal(this.handler, match.Handler);
             Assert.Equal(2, match.PathParameters.Count);
             Assert.Equal("guy", match.PathParameters["noun"]);
             Assert.Equal("wack", match.PathParameters["adj"]);
 
             Assert.True(this.router.TryMatchPath("/this/dog/is/cute", out match));
-            Assert.Equal(this.fakeHandler, match.Handler);
+            Assert.Equal(this.handler, match.Handler);
             Assert.Equal(2, match.PathParameters.Count);
             Assert.Equal("dog", match.PathParameters["noun"]);
             Assert.Equal("cute", match.PathParameters["adj"]);
@@ -129,12 +129,12 @@ namespace Sydney.Core.UnitTests
         [Fact]
         public void MatchPathTrimsLeadingAndTrailingSlashes()
         {
-            this.router.AddRoute("/three/level/path", this.fakeHandler);
+            this.router.AddRoute("/three/level/path", this.handler);
             Assert.True(
                 this.router.TryMatchPath(
                     "/////three/level/path///////",
                     out RouteMatch match));
-            Assert.Equal(this.fakeHandler, match.Handler);
+            Assert.Equal(this.handler, match.Handler);
             Assert.Equal(0, match.PathParameters.Count);
         }
 
