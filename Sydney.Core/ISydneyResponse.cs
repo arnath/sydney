@@ -11,7 +11,7 @@
         HttpStatusCode StatusCode { get; set; }
 
         /// <summary>
-        /// Gets or sets an optional payload object that will be automatically
+        /// Gets or sets an optional response body that will be automatically
         /// serialized to JSON using Utf8Json and send back to the client.
         /// </summary>
         object Payload { get; set; }

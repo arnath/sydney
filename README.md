@@ -11,7 +11,7 @@ Sydney is written to have pretty limited boilerplate, a simple to understand exe
 ## Usage
 
 ### Handler
-First define a handler class that inherits from RestHandlerBase. There are abstract methods defined for all the HTTP methods: `GetAsync`, `PostAsync`, `DeleteAsync`, `PutAsync`, `HeadAsync`, `PatchAsync`, and `OptionsAsync`. Just override the ones you want to handle (the rest will return HTTP 405).
+First define a handler class that inherits from `RestHandlerBase`. There are abstract methods defined for all the HTTP methods: `GetAsync`, `PostAsync`, `DeleteAsync`, `PutAsync`, `HeadAsync`, `PatchAsync`, and `OptionsAsync`. Just override the ones you want to handle (the rest will return HTTP 405).
 
 ```csharp
 // Declare a handler class that inherits from RestHandlerBase.
@@ -19,7 +19,7 @@ public class BooksHandler : RestHandlerBase
 {
     // Override the functions for the HTTP methods you want to handle (the rest 
     // will return HTTP 405).
-    protected override async Task<SydneyResponse> GetAsync(SydneyRequest request)
+    protected override async Task<ISydneyResponse> GetAsync(ISydneyRequest request)
     {
         dynamic payload = new 
         { 
@@ -31,13 +31,13 @@ public class BooksHandler : RestHandlerBase
             } 
         };
         
-        // Handlers must either return a SydneyResponse or throw an exception.
-        // A SydneyResponse contains an HttpStatusCode and an optional payload
+        // Handlers must either return a ISydneyResponse or throw an exception.
+        // A ISydneyResponse contains an HttpStatusCode and an optional payload
         // that is serialized as JSON (using Utf8Json) and send back to the client.
         return new SydneyResponse(HttpStatusCode.OK, payload);
     }
     
-    protected override async Task<SydneyResponse> PostAsync(SydneyRequest request)
+    protected override async Task<ISydneyResponse> PostAsync(ISydneyRequest request)
     {
         // You can deserialize a request payload by calling request.DeserializePayloadAsync<T>().
         // This will deserialize a JSON payload into whatever type you have defined. 

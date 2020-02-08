@@ -14,7 +14,7 @@
 
         private readonly Dictionary<Type, object> deserializedPayloads = new Dictionary<Type, object>();
 
-        public SydneyRequest(HttpListenerRequest httpListenerRequest, IDictionary<string, string> pathParameters)
+        internal SydneyRequest(HttpListenerRequest httpListenerRequest, IDictionary<string, string> pathParameters)
         {
             this.httpListenerRequest = httpListenerRequest ?? throw new ArgumentNullException(nameof(httpListenerRequest));
             this.PathParameters = pathParameters ?? throw new ArgumentNullException(nameof(pathParameters));
