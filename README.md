@@ -8,6 +8,10 @@ ASP.NET Core is mostly great and there's a lot of reasons to use it. I don't per
 
 Sydney is written to have pretty limited boilerplate, a simple to understand execution flow, and an easy to use error-handling model. Kestrel is super fast but it's deeply wired together with ASP.NET so Sydney uses the legacy HttpListener (which Microsoft has basically stopped updating). This means that it's never going to be the fastest web server out there. However, it's super easy to use and understand what's going on which makes it great for side projects or to spin up tiny services that won't get much traffic. 
 
+## Installation
+
+Sydney is available under the `Sydney.Core` NuGet package on nuget.org. You can find the latest release here: https://www.nuget.org/packages/Sydney.Core. 
+
 ## Usage
 
 ### Handler
