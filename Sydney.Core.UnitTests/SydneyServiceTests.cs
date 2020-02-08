@@ -5,6 +5,9 @@
     using FakeItEasy;
     using Xunit;
 
+    // TODO: Write some tests for HandleContextAsync. This requires creating some
+    // dummy classes/interfaces because none of the HttpListener class tree has
+    // any public constructors or interfaces.
     public class SydneyServiceTests
     {
         [Fact]
