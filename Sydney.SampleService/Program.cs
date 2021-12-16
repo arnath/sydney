@@ -6,8 +6,6 @@
     using Sydney.Core;
     using Utf8Json;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Logging.Abstractions;
-    using Microsoft.Extensions.Options;
     using Serilog;
 
     public class Program
@@ -21,7 +19,7 @@
               .CreateLogger();
             ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog();
 
-            using (SydneyService2 service = new SydneyService2(config, loggerFactory))
+            using (SydneyService service = new SydneyService(config, loggerFactory))
             {
                 service.AddRoute("/books/", new BooksHandler());
 
