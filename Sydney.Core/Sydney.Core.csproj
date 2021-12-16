@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -11,6 +11,7 @@
     <RepositoryUrl>https://github.com/arnath/sydney</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Description>Sydney HTTP Framework</Description>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,13 +5,23 @@
     using System.Threading.Tasks;
     using Sydney.Core;
     using Utf8Json;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
+    using Serilog;
 
     public class Program
     {
-        public static void Main()
+        public static async Task Main()
         {
             SydneyServiceConfig config = new SydneyServiceConfig("http", "*", 8080, returnExceptionMessagesInResponse: true);
-            using (SydneyService service = new SydneyService(config, new ConsoleLogger()))
+
+            Log.Logger = new LoggerConfiguration()
+              .WriteTo.Console()
+              .CreateLogger();
+            ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog();
+
+            using (SydneyService2 service = new SydneyService2(config, loggerFactory))
             {
                 service.AddRoute("/books/", new BooksHandler());
 
@@ -19,7 +29,7 @@
                 service.AddRoute("/users/{id}", new UserHandler());
 
                 // Blocks until Ctrl+C or SIGBREAK is received.
-                service.Start();
+                await service.StartAsync();
             }
         }
 
