@@ -70,19 +70,23 @@
             this.routes.Add(route);
         }
 
-        public bool TryMatchPath(string path, out RouteMatch match)
+        public bool TryMatchPath(string? path, out RouteMatch match)
         {
             match = default;
-            string[] segments = GetUrlSegments(path);
+            if (path == null)
+            {
+                return false;
+            }
 
             // Try to find a matching handler node for this path.
-            HandlerRouteNode handlerNode = this.MatchPathRecursive(this.root, segments, -1);
+            string[] segments = GetUrlSegments(path);
+            HandlerRouteNode? handlerNode = this.MatchPathRecursive(this.root, segments, -1);
             if (handlerNode != null)
             {
                 // If we found a handler, traverse back up the path to gather
                 // the path parameters.
                 Dictionary<string, string> pathParameters = new Dictionary<string, string>();
-                RouteNode node = handlerNode.Parent;
+                RouteNode? node = handlerNode.Parent;
                 int index = segments.Length - 1;
                 while (node != null)
                 {
@@ -102,7 +106,7 @@
             return false;
         }
 
-        private HandlerRouteNode MatchPathRecursive(RouteNode node, string[] segments, int index)
+        private HandlerRouteNode? MatchPathRecursive(RouteNode node, string[] segments, int index)
         {
             if (node is HandlerRouteNode handlerNode && index == segments.Length)
             {
@@ -134,7 +138,7 @@
             return url.Trim('/').Split('/');
         }
 
-        private static bool TryGetParameterName(string segment, out string parameterName)
+        private static bool TryGetParameterName(string segment, out string? parameterName)
         {
             if (segment[0] == '{' && segment[segment.Length - 1] == '}')
             {

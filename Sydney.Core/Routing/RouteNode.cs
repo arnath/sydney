@@ -26,6 +26,6 @@
 
         public IList<RouteNode> Children { get; }
 
-        public RouteNode Parent { get; }
+        public RouteNode? Parent { get; }
     }
 }

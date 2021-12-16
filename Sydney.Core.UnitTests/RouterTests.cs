@@ -45,8 +45,7 @@ namespace Sydney.Core.UnitTests
         [Fact]
         public void AddRouteTrimsLeadingAndTrailingSlashes()
         {
-            string prefix = this.router.AddRoute("///users///", this.handler);
-            Assert.Equal("users/", prefix);
+            this.router.AddRoute("///users///", this.handler);
 
             RouteNode root = GetRouteGraphRoot(this.router);
             RouteNode usersNode = root.Children.Single();
@@ -59,8 +58,7 @@ namespace Sydney.Core.UnitTests
         [Fact]
         public void AddRouteParameterSegmentEndsPrefix()
         {
-            string prefix = this.router.AddRoute("/system/users/{id}/profile", this.handler);
-            Assert.Equal("system/users/", prefix);
+            this.router.AddRoute("/system/users/{id}/profile", this.handler);
 
             RouteNode root = GetRouteGraphRoot(this.router);
             RouteNode node = root.Children.Single();

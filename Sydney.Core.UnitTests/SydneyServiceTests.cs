@@ -1,8 +1,9 @@
 ﻿namespace Sydney.Core.UnitTests
 {
     using System;
-    using System.Linq;
+    using System.Threading.Tasks;
     using FakeItEasy;
+    using Microsoft.Extensions.Logging.Abstractions;
     using Xunit;
 
     // TODO: Write some tests for HandleContextAsync. This requires creating some
@@ -18,7 +19,7 @@
             config.Host = "*";
             config.Port = 80;
 
-            SydneyService service = new SydneyService(config);
+            SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
 
             A.CallTo(() => config.Validate()).MustHaveHappenedOnceExactly();
         }
@@ -32,8 +33,8 @@
                     "*",
                     80);
             RestHandlerBase handler = A.Fake<RestHandlerBase>();
-            SydneyService service = new SydneyService(config);
-            service.Running = true;
+            SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
+            Task.Run(async () => await service.StartAsync());
 
             Exception exception = Record.Exception(() => service.AddRoute("/foo/bar", handler));
 
@@ -41,24 +42,6 @@
             Assert.Equal(
                 "Cannot add a route after the service has been started.",
                 exception.Message);
-        }
-
-        [Fact]
-        public void AddRouteStoresPrefixWithFullPath()
-        {
-            SydneyServiceConfig config =
-                new SydneyServiceConfig(
-                    Uri.UriSchemeHttp,
-                    "*",
-                    80);
-            RestHandlerBase handler = A.Fake<RestHandlerBase>();
-            SydneyService service = new SydneyService(config);
-
-            service.AddRoute("/foo/bar", handler);
-
-            Assert.Equal(
-                "http://*:80/foo/bar",
-                service.Prefixes.Single());
         }
     }
 }

@@ -14,9 +14,12 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Sydney.Core.Routing;
+    using Utf8Json;
 
     public class SydneyService : IHttpApplication<DefaultHttpContext>, IDisposable
     {
+        private const string ApplicationJsonContentType = "application/json; charset=utf-8";
+
         private readonly SydneyServiceConfig config;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger logger;
@@ -32,7 +35,6 @@
             config.Validate();
 
             this.router = new Router();
-            this.fullPrefixFormat = $"http://*:{config.Port}/{{0}}";
 
             // Listen on any IP on the configured port.
             KestrelServerOptions serverOptions = new KestrelServerOptions();
@@ -54,9 +56,7 @@
         }
 
 
-        internal HashSet<string> Prefixes { get; } = new HashSet<string>();
-
-        internal TaskCompletionSource RunningTaskCompletionSource { get; set; }
+        internal TaskCompletionSource? RunningTaskCompletionSource { get; set; }
 
         public async Task StartAsync()
         {
@@ -125,8 +125,8 @@
             }
 
             // Create and handle the request.
-            ISydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
-            ISydneyResponse response =
+            SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
+            SydneyResponse response =
                 await match.Handler.HandleRequestAsync(
                     request,
                     this.config.ReturnExceptionMessagesInResponse);
@@ -140,28 +140,16 @@
 
             if (response.Payload != null)
             {
-                context.Response.ContentType = MediaTypeNames.Application.Json;
-
-                // We have to serialize to a memory stream first in order to get the content length
-                // because the output stream does not support the property. It seems good to initialize the
-                // stream with a buffer size. 512 bytes was randomly chosen as a decent medium size for now. 
-                using (var memoryStream = new MemoryStream(DefaultBufferSize))
-                {
-                    await JsonSerializer.SerializeAsync(memoryStream, response.Payload);
-                    context.Response.ContentLength64 = memoryStream.Length;
-
-                    // Stream.CopyToAsync starts from the current position so seek to the beginning.
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-                    await memoryStream.CopyToAsync(context.Response.OutputStream);
-                }
+                context.Response.ContentType = ApplicationJsonContentType;
+                await JsonSerializer.SerializeAsync(context.Response.Body, response.Payload);
             }
             else
             {
-                context.Response.ContentLength64 = 0;
+                context.Response.ContentLength = 0;
             }
 
             // Close the response to send it back to the client.
-            context.Response.Close();
+            await context.Response.CompleteAsync();
         }
 
         public DefaultHttpContext CreateContext(IFeatureCollection contextFeatures)

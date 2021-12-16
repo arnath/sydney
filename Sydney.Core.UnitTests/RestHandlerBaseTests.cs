@@ -12,14 +12,14 @@
     {
         private readonly RestHandlerBase handler;
 
-        private readonly ISydneyRequest request;
+        private readonly SydneyRequest request;
 
         private readonly ILogger logger;
 
         public RestHandlerBaseTests()
         {
             this.handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
-            this.request = A.Fake<ISydneyRequest>();
+            this.request = A.Fake<SydneyRequest>();
 
             // There are no tests for any calls to this because it turns out that
             // LogInformation, LogWarning, and LogError are extension methods so
@@ -39,14 +39,13 @@
         {
             A.CallTo(this.handler)
                 .Where(call => call.Method.Name == handlerMethodName)
-                .WithReturnType<Task<ISydneyResponse>>()
-                .Returns(Task.FromResult<ISydneyResponse>(new SydneyResponse(HttpStatusCode.Ambiguous)));
+                .WithReturnType<Task<SydneyResponse>>()
+                .Returns(Task.FromResult<SydneyResponse>(new SydneyResponse(HttpStatusCode.Ambiguous)));
             A.CallTo(() => this.request.HttpMethod).Returns(httpMethod);
 
-            ISydneyResponse response =
+            SydneyResponse response =
                 this.handler.HandleRequestAsync(
                     this.request,
-                    this.logger,
                     false).Result;
 
             Assert.Equal(HttpStatusCode.Ambiguous, response.StatusCode);
@@ -60,10 +59,9 @@
         {
             A.CallTo(() => this.request.HttpMethod).Returns(HttpMethod.Get);
 
-            ISydneyResponse response =
+            SydneyResponse response =
                 this.handler.HandleRequestAsync(
                     this.request,
-                    this.logger,
                     false).Result;
 
             Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
@@ -77,10 +75,9 @@
                 .Throws(new HttpResponseException(HttpStatusCode.EarlyHints));
             A.CallTo(() => this.request.HttpMethod).Returns(HttpMethod.Get);
 
-            ISydneyResponse response =
+            SydneyResponse response =
                 this.handler.HandleRequestAsync(
                     this.request,
-                    this.logger,
                     false).Result;
 
             Assert.Equal(HttpStatusCode.EarlyHints, response.StatusCode);
@@ -94,10 +91,9 @@
                 .Throws(new InvalidOperationException());
             A.CallTo(() => this.request.HttpMethod).Returns(HttpMethod.Get);
 
-            ISydneyResponse response =
+            SydneyResponse response =
                 this.handler.HandleRequestAsync(
                     this.request,
-                    this.logger,
                     false).Result;
 
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
@@ -112,10 +108,9 @@
                 .Throws(new InvalidOperationException(expectedExceptionMessage));
             A.CallTo(() => this.request.HttpMethod).Returns(HttpMethod.Get);
 
-            ISydneyResponse response =
+            SydneyResponse response =
                 this.handler.HandleRequestAsync(
                     this.request,
-                    this.logger,
                     true).Result;
 
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);

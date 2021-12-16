@@ -23,7 +23,7 @@
         /// </summary>
         /// <param name="statusCode">The HTTP status code to return to the client.</param>
         /// <param name="payload">The response body to return to the client.</param>
-        public SydneyResponse(HttpStatusCode statusCode, object payload)
+        public SydneyResponse(HttpStatusCode statusCode, object? payload)
             : this(statusCode)
         {
             this.Payload = payload;
