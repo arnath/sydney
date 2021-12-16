@@ -8,7 +8,14 @@
 
     public abstract class RestHandlerBase
     {
-        internal async Task<ISydneyResponse> HandleRequestAsync(ISydneyRequest request, ILogger logger, bool returnExceptionMessagesInResponse)
+        private readonly ILogger logger;
+
+        protected RestHandlerBase(ILoggerFactory loggerFactory)
+        {
+            this.logger = loggerFactory.CreateLogger<RestHandlerBase>();            
+        }
+
+        internal async Task<ISydneyResponse> HandleRequestAsync(ISydneyRequest request, bool returnExceptionMessagesInResponse)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -49,7 +56,7 @@
                         throw new NotImplementedException();
                 }
 
-                logger.LogInformation($"Request completed after {stopwatch.Elapsed}, status code: {response.StatusCode}.");
+                this.logger.LogInformation($"Request completed after {stopwatch.Elapsed}, status code: {response.StatusCode}.");
 
                 return response;
             }
@@ -59,21 +66,21 @@
                 switch (exception)
                 {
                     case HttpResponseException hre:
-                        logger.LogWarning(
+                        this.logger.LogWarning(
                             hre,
                             $"Request failed after {stopwatch.Elapsed}, status code: {hre.StatusCode}, exception: {hre}");
                         statusCode = hre.StatusCode;
                         break;
 
                     case NotImplementedException nie:
-                        logger.LogWarning(
+                        this.logger.LogWarning(
                             nie,
                             $"Request made for unsupported HTTP method {request.HttpMethod}.");
                         statusCode = HttpStatusCode.MethodNotAllowed;
                         break;
 
                     default:
-                        logger.LogError(
+                        this.logger.LogError(
                             exception,
                             $"Unexpected exception processing request after {stopwatch.Elapsed}, exception: {exception}");
                         break;

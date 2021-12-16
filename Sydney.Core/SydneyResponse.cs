@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using System.Net;
 
-    public class SydneyResponse : ISydneyResponse
+    public class SydneyResponse
     {
         /// <summary>
         /// Creates a new instance of the SydneyResponse class with the specified
@@ -29,12 +29,20 @@
             this.Payload = payload;
         }
 
+        /// <summary>
+        /// Gets or sets the HTTP status code of the response.
+        /// </summary>
         public HttpStatusCode StatusCode { get; set; }
 
-        public object Payload { get; set; }
+        /// <summary>
+        /// Gets or sets an optional response body that will be automatically
+        /// serialized to JSON using Utf8Json and send back to the client.
+        /// </summary>
+        public object? Payload { get; set; }
 
-        public bool KeepAlive { get; set; }
-
+        /// <summary>
+        /// Gets a collection of key/value pairs for headers to add to the response.
+        /// </summary>
         public IDictionary<string, string> Headers { get; }
     }
 }

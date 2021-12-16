@@ -22,7 +22,6 @@
         private readonly ILogger logger;
         private readonly KestrelServer server;
         private readonly Router router;
-        private readonly string fullPrefixFormat;
 
         public SydneyService(SydneyServiceConfig config, ILoggerFactory loggerFactory)
         {
@@ -33,7 +32,7 @@
             config.Validate();
 
             this.router = new Router();
-            this.fullPrefixFormat = $"https://*:{config.Port}/{{0}}";
+            this.fullPrefixFormat = $"http://*:{config.Port}/{{0}}";
 
             // Listen on any IP on the configured port.
             KestrelServerOptions serverOptions = new KestrelServerOptions();
@@ -69,11 +68,9 @@
             this.RunningTaskCompletionSource = new TaskCompletionSource();
 
             this.logger.LogInformation("Starting service, press Ctrl-C to stop ...");
-            foreach (string prefix in this.Prefixes)
+            foreach (string route in this.router.Routes)
             {
-                // TODO: No longer sure this is the best way to do this now that they're
-                // not needed for the listener.
-                this.logger.LogInformation($"Listening on prefix: {prefix}");
+                this.logger.LogInformation($"Registered route: {route}");
             }
 
             // Set up Ctrl-Break and Ctrl-C handler.
@@ -110,12 +107,7 @@
             }
 
             // Trim leading and trailing slashes from the route.
-            route = route.Trim('/');
-
-            // Keep track of prefixes to register as routes are added.
-            string prefixPath = this.router.AddRoute(route, handler);
-            string prefix = string.Format(this.fullPrefixFormat, prefixPath);
-            this.Prefixes.Add(prefix);
+            this.router.AddRoute(route.Trim('/'), handler);
         }
 
         public async Task ProcessRequestAsync(DefaultHttpContext context)
@@ -131,6 +123,45 @@
 
                 return;
             }
+
+            // Create and handle the request.
+            ISydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
+            ISydneyResponse response =
+                await match.Handler.HandleRequestAsync(
+                    request,
+                    this.config.ReturnExceptionMessagesInResponse);
+
+            // Write the response to context.Response.
+            context.Response.StatusCode = (int)response.StatusCode;
+            foreach (KeyValuePair<string, string> header in response.Headers)
+            {
+                context.Response.Headers.Add(header.Key, header.Value);
+            }
+
+            if (response.Payload != null)
+            {
+                context.Response.ContentType = MediaTypeNames.Application.Json;
+
+                // We have to serialize to a memory stream first in order to get the content length
+                // because the output stream does not support the property. It seems good to initialize the
+                // stream with a buffer size. 512 bytes was randomly chosen as a decent medium size for now. 
+                using (var memoryStream = new MemoryStream(DefaultBufferSize))
+                {
+                    await JsonSerializer.SerializeAsync(memoryStream, response.Payload);
+                    context.Response.ContentLength64 = memoryStream.Length;
+
+                    // Stream.CopyToAsync starts from the current position so seek to the beginning.
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    await memoryStream.CopyToAsync(context.Response.OutputStream);
+                }
+            }
+            else
+            {
+                context.Response.ContentLength64 = 0;
+            }
+
+            // Close the response to send it back to the client.
+            context.Response.Close();
         }
 
         public DefaultHttpContext CreateContext(IFeatureCollection contextFeatures)

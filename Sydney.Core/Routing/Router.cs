@@ -2,20 +2,26 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Text;
 
     internal class Router
     {
         public const string EmptySegment = "/";
 
         private readonly RouteNode root;
+        private readonly List<string> routes;
 
         public Router()
         {
             this.root = new RouteNode(EmptySegment);
+            this.routes = new List<string>();
         }
 
-        public string AddRoute(string route, RestHandlerBase handler)
+        public IReadOnlyList<string> Routes
+        {
+            get { return this.routes; }
+        }
+
+        public void AddRoute(string route, RestHandlerBase handler)
         {
             // Check if there's already an existing handler for the same route
             // (this will catch same route with different parameter names).
@@ -23,11 +29,6 @@
             {
                 throw new ArgumentException("There is already a registered handler for this route.", nameof(route));
             }
-
-            // As we try to add the route, also keep track of the longest prefix
-            // that we can register with the HTTP listener.
-            bool foundParameterNode = false;
-            StringBuilder longestPrefixBuilder = new StringBuilder(route.Length);
 
             string[] segments = GetUrlSegments(route);
             HashSet<string> parameterNames = new HashSet<string>();
@@ -52,20 +53,10 @@
 
                     parameterNames.Add(parameterName);
                     child = new ParameterRouteNode(segment, parameterName, node);
-
-                    foundParameterNode = true;
                 }
                 else
                 {
                     child = new RouteNode(segment, node);
-
-                    if (!foundParameterNode)
-                    {
-                        // Append the segment to the longest prefix if we haven't already
-                        // cut it off.
-                        longestPrefixBuilder.Append(segment);
-                        longestPrefixBuilder.Append('/');
-                    }
                 }
 
                 node.Children.Add(child);
@@ -75,7 +66,8 @@
             // Add a handler node as a leaf below the last route node.
             node.Children.Add(new HandlerRouteNode(handler, node));
 
-            return longestPrefixBuilder.ToString();
+            // Add the new route to the list of registered routes.
+            this.routes.Add(route);
         }
 
         public bool TryMatchPath(string path, out RouteMatch match)

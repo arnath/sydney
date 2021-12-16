@@ -21,10 +21,10 @@
 
             using (SydneyService service = new SydneyService(config, loggerFactory))
             {
-                service.AddRoute("/books/", new BooksHandler());
+                service.AddRoute("/books/", new BooksHandler(loggerFactory));
 
                 // Routes can have path parameters by enclosing a name in braces.
-                service.AddRoute("/users/{id}", new UserHandler());
+                service.AddRoute("/users/{id}", new UserHandler(loggerFactory));
 
                 // Blocks until Ctrl+C or SIGBREAK is received.
                 await service.StartAsync();
@@ -34,6 +34,8 @@
         // Declare a handler class that inherits from RestHandlerBase.
         private class BooksHandler : RestHandlerBase
         {
+            public BooksHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+
             // Override the functions for the HTTP methods you want to handle (the rest 
             // will return HTTP 405).
             protected override async Task<ISydneyResponse> GetAsync(ISydneyRequest request)
@@ -74,6 +76,9 @@
             }
         }
 
-        private class UserHandler : RestHandlerBase {}
+        private class UserHandler : RestHandlerBase
+        {
+            public UserHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+        }
     }
 }
