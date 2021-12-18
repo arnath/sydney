@@ -4,7 +4,6 @@
     using System.Net;
     using System.Threading.Tasks;
     using Sydney.Core;
-    using Utf8Json;
     using Microsoft.Extensions.Logging;
     using Serilog;
 
@@ -12,7 +11,7 @@
     {
         public static async Task Main()
         {
-            SydneyServiceConfig config = new SydneyServiceConfig("http", "*", 8080, returnExceptionMessagesInResponse: true);
+            SydneyServiceConfig config = new SydneyServiceConfig(8080, returnExceptionMessagesInResponse: true);
 
             Log.Logger = new LoggerConfiguration()
               .WriteTo.Console()

@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.3</Version>
+    <Version>0.2.0</Version>
     <Authors>Vijay Prakash</Authors>
     <Company />
     <Product>Sydney HTTP Framework</Product>

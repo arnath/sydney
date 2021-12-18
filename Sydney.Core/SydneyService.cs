@@ -16,10 +16,8 @@
     using Sydney.Core.Routing;
     using Utf8Json;
 
-    public class SydneyService : IHttpApplication<DefaultHttpContext>, IDisposable
+    public class SydneyService : IDisposable
     {
-        private const string ApplicationJsonContentType = "application/json; charset=utf-8";
-
         private readonly SydneyServiceConfig config;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger logger;
@@ -76,8 +74,15 @@
             // Set up Ctrl-Break and Ctrl-C handler.
             Console.CancelKeyPress += this.HandleControlC;
 
-            await this.server.StartAsync(this, CancellationToken.None);
+            // Start the service.
+            SydneyHttpApplication httpApplication =
+                new SydneyHttpApplication(
+                    this.router,
+                    this.config.ReturnExceptionMessagesInResponse,
+                    this.loggerFactory);
+            await this.server.StartAsync(httpApplication, CancellationToken.None);
 
+            // Await a TaskCompletionSource to make this function not return until the service is stopped.
             await this.RunningTaskCompletionSource.Task;
         }
 
@@ -101,6 +106,16 @@
 
         public void AddRoute(string route, RestHandlerBase handler)
         {
+            if (route == null)
+            {
+                throw new ArgumentNullException(nameof(route));
+            }
+
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
             if (this.RunningTaskCompletionSource != null)
             {
                 throw new InvalidOperationException("Cannot add a route after the service has been started.");
@@ -108,63 +123,6 @@
 
             // Trim leading and trailing slashes from the route.
             this.router.AddRoute(route.Trim('/'), handler);
-        }
-
-        public async Task ProcessRequestAsync(DefaultHttpContext context)
-        {
-            // Try to match the incoming URL to a handler.
-            if (!this.router.TryMatchPath(context.Request.Path.Value, out RouteMatch match))
-            {
-                this.logger.LogWarning($"No matching handler found for incoming request url: {context.Request.Path}.");
-
-                // If we couldn't, return a 404.
-                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                await context.Response.CompleteAsync();
-
-                return;
-            }
-
-            // Create and handle the request.
-            SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
-            SydneyResponse response =
-                await match.Handler.HandleRequestAsync(
-                    request,
-                    this.config.ReturnExceptionMessagesInResponse);
-
-            // Write the response to context.Response.
-            context.Response.StatusCode = (int)response.StatusCode;
-            foreach (KeyValuePair<string, string> header in response.Headers)
-            {
-                context.Response.Headers.Add(header.Key, header.Value);
-            }
-
-            if (response.Payload != null)
-            {
-                context.Response.ContentType = ApplicationJsonContentType;
-                await JsonSerializer.SerializeAsync(context.Response.Body, response.Payload);
-            }
-            else
-            {
-                context.Response.ContentLength = 0;
-            }
-
-            // Close the response to send it back to the client.
-            await context.Response.CompleteAsync();
-        }
-
-        public DefaultHttpContext CreateContext(IFeatureCollection contextFeatures)
-        {
-            return new DefaultHttpContext(contextFeatures);
-        }
-
-        public void DisposeContext(DefaultHttpContext context, Exception? exception)
-        {
-            if (exception != null)
-            {
-                this.logger.LogError(
-                    exception,
-                    $"Unexpected exception handling context, exception: {exception}");
-            }
         }
 
         public void Dispose()
