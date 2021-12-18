@@ -24,6 +24,8 @@
         private readonly KestrelServer server;
         private readonly Router router;
 
+        private TaskCompletionSource? runningTaskCompletionSource;
+
         public SydneyService(SydneyServiceConfig config, ILoggerFactory loggerFactory)
         {
             this.config = config ?? throw new ArgumentNullException(nameof(config));
@@ -54,16 +56,14 @@
         }
 
 
-        internal TaskCompletionSource? RunningTaskCompletionSource { get; set; }
-
         public async Task StartAsync()
         {
-            if (this.RunningTaskCompletionSource != null)
+            if (this.runningTaskCompletionSource != null)
             {
                 throw new InvalidOperationException("Service has already been started.");
             }
 
-            this.RunningTaskCompletionSource = new TaskCompletionSource();
+            this.runningTaskCompletionSource = new TaskCompletionSource();
 
             this.logger.LogInformation("Starting service, press Ctrl-C to stop ...");
             foreach (string route in this.router.Routes)
@@ -83,18 +83,18 @@
             await this.server.StartAsync(httpApplication, CancellationToken.None);
 
             // Await a TaskCompletionSource to make this function not return until the service is stopped.
-            await this.RunningTaskCompletionSource.Task;
+            await this.runningTaskCompletionSource.Task;
         }
 
         public async Task StopAsync()
         {
-            if (this.RunningTaskCompletionSource == null)
+            if (this.runningTaskCompletionSource == null)
             {
                 throw new InvalidOperationException("Cannot stop the service when it has not been started.");
             }
 
-            this.RunningTaskCompletionSource.SetResult();
-            this.RunningTaskCompletionSource = null;
+            this.runningTaskCompletionSource.SetResult();
+            this.runningTaskCompletionSource = null;
 
             this.logger.LogInformation("Stopping service ...");
 
@@ -116,7 +116,7 @@
                 throw new ArgumentNullException(nameof(handler));
             }
 
-            if (this.RunningTaskCompletionSource != null)
+            if (this.runningTaskCompletionSource != null)
             {
                 throw new InvalidOperationException("Cannot add a route after the service has been started.");
             }
