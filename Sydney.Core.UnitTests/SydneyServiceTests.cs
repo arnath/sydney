@@ -1,7 +1,6 @@
 ﻿namespace Sydney.Core.UnitTests
 {
     using System;
-    using System.Threading.Tasks;
     using FakeItEasy;
     using Microsoft.Extensions.Logging.Abstractions;
     using Xunit;

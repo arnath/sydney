@@ -15,7 +15,7 @@
             this.logger = loggerFactory.CreateLogger<RestHandlerBase>();            
         }
 
-        internal async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, bool returnExceptionMessagesInResponse)
+        internal virtual async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, bool returnExceptionMessagesInResponse)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 

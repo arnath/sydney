@@ -31,7 +31,15 @@
             return new DefaultHttpContext(contextFeatures);
         }
 
-        public void DisposeContext(HttpContext context, Exception? exception) {}
+        public void DisposeContext(HttpContext context, Exception? exception)
+        {
+            if (exception != null)
+            {
+                this.logger.LogError(
+                    exception,
+                    $"Unexpected exception handling context, exception: {exception}");
+            }
+        }
 
         public async Task ProcessRequestAsync(HttpContext context)
         {
@@ -42,8 +50,8 @@
 
                 // If we couldn't, return a 404.
                 context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                await context.Response.CompleteAsync();
 
+                await context.Response.CompleteAsync();
                 return;
             }
 
@@ -61,10 +69,16 @@
                 context.Response.Headers.Add(header.Key, header.Value);
             }
 
+            // Lock headers and status code.
+            await context.Response.StartAsync();
+
             if (response.Payload != null)
             {
+                string jsonPayload = JsonSerializer.ToJsonString(response.Payload);
+                
                 context.Response.ContentType = ApplicationJsonContentType;
-                await JsonSerializer.SerializeAsync(context.Response.Body, response.Payload);
+                context.Response.ContentLength = jsonPayload.Length;
+                await context.Response.WriteAsync(jsonPayload);
             }
             else
             {

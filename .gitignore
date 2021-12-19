@@ -348,3 +348,6 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# This file keeps getting added by Visual Studio.
+Sydney.Core/Properties/launchSettings.json
