@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
     <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.3.0</Version>
     <Authors>Vijay Prakash</Authors>
     <Company />
