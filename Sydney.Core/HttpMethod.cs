@@ -4,8 +4,7 @@
     // string, so we turn it into this for easier handling.
     public enum HttpMethod
     {
-        None = 0,
-        Get,
+        Get = 0,
         Post,
         Delete,
         Put,
