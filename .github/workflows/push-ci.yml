@@ -22,6 +22,6 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release
     - name: Create NuGet package
-      run: dotnet pack --configuration Release
+      run: dotnet pack --no-restore --configuration Release
     - name: Publish NuGet package
-      run: dotnet nuget push "bin/Release/Sydney.Core.*.nupkg" --source "github"
+      run: dotnet nuget push "Sydney.Core/bin/Release/Sydney.Core.*.nupkg" --source "github"
