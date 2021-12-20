@@ -20,4 +20,4 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release
     - name: Publish NuGet package
-      run: dotnet nuget push "Sydney.Core/bin/Release/Sydney.Core.*.nupkg" --api-key ${{ secrets.NUGET_ORG_API_KEY }}
+      run: dotnet nuget push "Sydney.Core/bin/Release/Sydney.Core.*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ORG_API_KEY }}
