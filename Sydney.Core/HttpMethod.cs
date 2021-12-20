@@ -1,11 +1,10 @@
 ﻿namespace Sydney.Core
 {
-    // For some reason, System.Net.Http.HttpMethod is a class instead of an
-    // enum so this had to be created.
+    // For some reason, the method in the Kestrel HttpRequest class is a
+    // string, so we turn it into this for easier handling.
     public enum HttpMethod
     {
-        None = 0,
-        Get,
+        Get = 0,
         Post,
         Delete,
         Put,

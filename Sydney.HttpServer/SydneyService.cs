@@ -1,30 +1,22 @@
-﻿namespace Sydney.Core
+namespace Sydney.HttpServer
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using System.Threading;
-    using System.Threading.Tasks;
-
     using Microsoft.AspNetCore.Hosting.Server;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Features;
     using Microsoft.AspNetCore.Server.Kestrel.Core;
     using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
+    using Sydney.Core;
     using Sydney.Core.Routing;
-    using Utf8Json;
 
-    public class SydneyService : IDisposable
+    public class SydneyService : IHttpApplication<DefaultHttpContext>, IDisposable
     {
         private readonly SydneyServiceConfig config;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger logger;
         private readonly KestrelServer server;
         private readonly Router router;
-
-        private TaskCompletionSource? runningTaskCompletionSource;
+        private readonly string fullPrefixFormat;
 
         public SydneyService(SydneyServiceConfig config, ILoggerFactory loggerFactory)
         {
@@ -35,6 +27,7 @@
             config.Validate();
 
             this.router = new Router();
+            this.fullPrefixFormat = $"https://*:{config.Port}/{{0}}";
 
             // Listen on any IP on the configured port.
             KestrelServerOptions serverOptions = new KestrelServerOptions();
@@ -56,46 +49,40 @@
         }
 
 
-        public async Task StartAsync()
-        {
-            if (this.runningTaskCompletionSource != null)
-            {
-                throw new InvalidOperationException("Service has already been started.");
-            }
+        internal HashSet<String> Prefixes { get; } = new HashSet<string>();
 
-            this.runningTaskCompletionSource = new TaskCompletionSource();
+        /// <summary>
+        /// Indicates whether the service is running.
+        /// </summary>
+        internal bool Running { get; set; } = false;
+
+        public Task StartAsync()
+        {
+            this.Running = true;
 
             this.logger.LogInformation("Starting service, press Ctrl-C to stop ...");
-            foreach (string route in this.router.Routes)
+            foreach (string prefix in this.Prefixes)
             {
-                this.logger.LogInformation($"Registered route: {route}");
+                // TODO: No longer sure this is the best way to do this now that they're
+                // not needed for the listener.
+                this.logger.LogInformation($"Listening on prefix: {prefix}");
             }
 
             // Set up Ctrl-Break and Ctrl-C handler.
             Console.CancelKeyPress += this.HandleControlC;
 
-            // Start the service.
-            SydneyHttpApplication httpApplication =
-                new SydneyHttpApplication(
-                    this.router,
-                    this.config.ReturnExceptionMessagesInResponse,
-                    this.loggerFactory);
-            await this.server.StartAsync(httpApplication, CancellationToken.None);
-
-            // Await a TaskCompletionSource to make this function not return until the service is stopped.
-            await this.runningTaskCompletionSource.Task;
+            return this.server.StartAsync(this, CancellationToken.None);
         }
 
         public async Task StopAsync()
         {
-            if (this.runningTaskCompletionSource == null)
+            if (!this.Running)
             {
                 throw new InvalidOperationException("Cannot stop the service when it has not been started.");
             }
 
-            this.runningTaskCompletionSource.SetResult();
-            this.runningTaskCompletionSource = null;
-
+            this.Running = false;
+            
             this.logger.LogInformation("Stopping service ...");
 
             await this.server.StopAsync(CancellationToken.None);
@@ -106,23 +93,48 @@
 
         public void AddRoute(string route, RestHandlerBase handler)
         {
-            if (route == null)
-            {
-                throw new ArgumentNullException(nameof(route));
-            }
-
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            if (this.runningTaskCompletionSource != null)
+            if (this.Running)
             {
                 throw new InvalidOperationException("Cannot add a route after the service has been started.");
             }
 
             // Trim leading and trailing slashes from the route.
-            this.router.AddRoute(route.Trim('/'), handler);
+            route = route.Trim('/');
+
+            // Keep track of prefixes to register as routes are added.
+            string prefixPath = this.router.AddRoute(route, handler);
+            string prefix = string.Format(this.fullPrefixFormat, prefixPath);
+            this.Prefixes.Add(prefix);
+        }
+
+        public async Task ProcessRequestAsync(DefaultHttpContext context)
+        {
+            // Try to match the incoming URL to a handler.
+            if (!this.router.TryMatchPath(context.Request.Path.Value, out RouteMatch match))
+            {
+                this.logger.LogWarning($"No matching handler found for incoming request url: {context.Request.Url}.");
+
+                // If we couldn't, return a 404.
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                context.Response.Close();
+
+                return;
+            }
+        }
+
+        public DefaultHttpContext CreateContext(IFeatureCollection contextFeatures)
+        {
+            return new DefaultHttpContext(contextFeatures);
+        }
+
+        public void DisposeContext(DefaultHttpContext context, Exception? exception)
+        {
+            if (exception != null)
+            {
+                this.logger.LogError(
+                    exception,
+                    $"Unexpected exception handling context, exception: {exception}");
+            }
         }
 
         public void Dispose()

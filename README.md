@@ -23,7 +23,7 @@ public class BooksHandler : RestHandlerBase
 {
     // Override the functions for the HTTP methods you want to handle (the rest 
     // will return HTTP 405).
-    protected override async Task<ISydneyResponse> GetAsync(ISydneyRequest request)
+    protected override async Task<SydneyResponse> GetAsync(SydneyRequest request)
     {
         dynamic payload = new 
         { 
@@ -35,13 +35,13 @@ public class BooksHandler : RestHandlerBase
             } 
         };
         
-        // Handlers must either return a ISydneyResponse or throw an exception.
-        // A ISydneyResponse contains an HttpStatusCode and an optional payload
+        // Handlers must either return a SydneyResponse or throw an exception.
+        // A SydneyResponse contains an HttpStatusCode and an optional payload
         // that is serialized as JSON (using Utf8Json) and send back to the client.
         return new SydneyResponse(HttpStatusCode.OK, payload);
     }
     
-    protected override async Task<ISydneyResponse> PostAsync(ISydneyRequest request)
+    protected override async Task<SydneyResponse> PostAsync(SydneyRequest request)
     {
         // You can deserialize a request payload by calling request.DeserializePayloadAsync<T>().
         // This will deserialize a JSON payload into whatever type you have defined. 

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29519.181
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sydney.Core", "Sydney.Core\Sydney.Core.csproj", "{6AF0752F-7631-4532-912E-288498D9A91F}"
 EndProject
@@ -10,12 +10,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8139EED3-70F6-4F97-90CF-80F4E1EEBDA2}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		.github\workflows\build.yml = .github\workflows\build.yml
 		CodeAnalysis.ruleset = CodeAnalysis.ruleset
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sydney.Core.UnitTests", "Sydney.Core.UnitTests\Sydney.Core.UnitTests.csproj", "{09E21308-B39C-4593-B9BF-1F27FEB3179B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sydney.Core.UnitTests", "Sydney.Core.UnitTests\Sydney.Core.UnitTests.csproj", "{09E21308-B39C-4593-B9BF-1F27FEB3179B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

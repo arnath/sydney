@@ -4,31 +4,40 @@
     using System.Net;
     using System.Threading.Tasks;
     using Sydney.Core;
-    using Utf8Json;
+    using Microsoft.Extensions.Logging;
+    using Serilog;
 
     public class Program
     {
-        public static void Main()
+        public static async Task Main()
         {
-            SydneyServiceConfig config = new SydneyServiceConfig("http", "*", 8080, returnExceptionMessagesInResponse: true);
-            using (SydneyService service = new SydneyService(config, new ConsoleLogger()))
+            SydneyServiceConfig config = new SydneyServiceConfig(8080, returnExceptionMessagesInResponse: true);
+
+            Log.Logger = new LoggerConfiguration()
+              .WriteTo.Console()
+              .CreateLogger();
+            ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog();
+
+            using (SydneyService service = new SydneyService(config, loggerFactory))
             {
-                service.AddRoute("/books/", new BooksHandler());
+                service.AddRoute("/books/", new BooksHandler(loggerFactory));
 
                 // Routes can have path parameters by enclosing a name in braces.
-                service.AddRoute("/users/{id}", new UserHandler());
+                service.AddRoute("/users/{id}", new UserHandler(loggerFactory));
 
                 // Blocks until Ctrl+C or SIGBREAK is received.
-                service.Start();
+                await service.StartAsync();
             }
         }
 
         // Declare a handler class that inherits from RestHandlerBase.
         private class BooksHandler : RestHandlerBase
         {
+            public BooksHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+
             // Override the functions for the HTTP methods you want to handle (the rest 
             // will return HTTP 405).
-            protected override async Task<ISydneyResponse> GetAsync(ISydneyRequest request)
+            protected override async Task<SydneyResponse> GetAsync(SydneyRequest request)
             {
                 dynamic payload = new
                 {
@@ -46,7 +55,7 @@
                 return new SydneyResponse(HttpStatusCode.OK, payload);
             }
 
-            protected override async Task<ISydneyResponse> PostAsync(ISydneyRequest request)
+            protected override async Task<SydneyResponse> PostAsync(SydneyRequest request)
             {
                 // You can deserialize a request payload by calling request.DeserializePayloadAsync<T>().
                 // This will deserialize a JSON payload into whatever type you have defined. 
@@ -66,6 +75,9 @@
             }
         }
 
-        private class UserHandler : RestHandlerBase {}
+        private class UserHandler : RestHandlerBase
+        {
+            public UserHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+        }
     }
 }
