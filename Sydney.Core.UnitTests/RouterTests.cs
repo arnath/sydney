@@ -94,14 +94,14 @@ namespace Sydney.Core.UnitTests
         public void MatchPathDoesNotMatchSubPath()
         {
             this.router.AddRoute("/three/level/path", this.handler);
-            Assert.False(this.router.TryMatchPath("/three/level/path/plusone", out _));
+            Assert.False(this.router.TryMatchRoute("/three/level/path/plusone", out _));
         }
 
         [Fact]
         public void MatchPathMatchesExactPath()
         {
             this.router.AddRoute("/three/level/path", this.handler);
-            Assert.True(this.router.TryMatchPath("/three/level/path", out RouteMatch match));
+            Assert.True(this.router.TryMatchRoute("/three/level/path", out RouteMatch match));
             Assert.Equal(this.handler, match.Handler);
             Assert.Equal(0, match.PathParameters.Count);
         }
@@ -111,13 +111,13 @@ namespace Sydney.Core.UnitTests
         {
             this.router.AddRoute("/this/{noun}/is/{adj}", this.handler);
             
-            Assert.True(this.router.TryMatchPath("/this/guy/is/wack", out RouteMatch match));
+            Assert.True(this.router.TryMatchRoute("/this/guy/is/wack", out RouteMatch match));
             Assert.Equal(this.handler, match.Handler);
             Assert.Equal(2, match.PathParameters.Count);
             Assert.Equal("guy", match.PathParameters["noun"]);
             Assert.Equal("wack", match.PathParameters["adj"]);
 
-            Assert.True(this.router.TryMatchPath("/this/dog/is/cute", out match));
+            Assert.True(this.router.TryMatchRoute("/this/dog/is/cute", out match));
             Assert.Equal(this.handler, match.Handler);
             Assert.Equal(2, match.PathParameters.Count);
             Assert.Equal("dog", match.PathParameters["noun"]);
@@ -129,7 +129,7 @@ namespace Sydney.Core.UnitTests
         {
             this.router.AddRoute("/three/level/path", this.handler);
             Assert.True(
-                this.router.TryMatchPath(
+                this.router.TryMatchRoute(
                     "/////three/level/path///////",
                     out RouteMatch match));
             Assert.Equal(this.handler, match.Handler);

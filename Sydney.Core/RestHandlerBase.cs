@@ -56,7 +56,10 @@
                         throw new NotImplementedException();
                 }
 
-                this.logger.LogInformation($"Request completed after {stopwatch.Elapsed}, status code: {response.StatusCode}.");
+                this.logger.LogInformation(
+                    "Request completed after {Elapsed}, status code: {StatusCode}.",
+                    stopwatch.Elapsed,
+                    response.StatusCode);
 
                 return response;
             }
@@ -68,21 +71,27 @@
                     case HttpResponseException hre:
                         this.logger.LogWarning(
                             hre,
-                            $"Request failed after {stopwatch.Elapsed}, status code: {hre.StatusCode}, exception: {hre}");
+                            "Request failed after {Elapsed}, status code: {StatusCode}, exception: {Exception}",
+                            stopwatch.Elapsed,
+                            hre.StatusCode,
+                            hre);
                         statusCode = hre.StatusCode;
                         break;
 
                     case NotImplementedException nie:
                         this.logger.LogWarning(
                             nie,
-                            $"Request made for unsupported HTTP method {request.HttpMethod}.");
+                            "Request made for unsupported HTTP method {HttpMethod}.",
+                            request.HttpMethod);
                         statusCode = HttpStatusCode.MethodNotAllowed;
                         break;
 
                     default:
                         this.logger.LogError(
                             exception,
-                            $"Unexpected exception processing request after {stopwatch.Elapsed}, exception: {exception}");
+                            "Unexpected exception processing request after {Elapsed}, exception: {Exception}",
+                            stopwatch.Elapsed,
+                            exception);
                         break;
                 }
 

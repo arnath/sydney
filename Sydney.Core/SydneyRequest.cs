@@ -74,7 +74,11 @@
         /// </summary>
         public Stream PayloadStream => this.httpRequest.Body;
 
-        public async Task<TPayload> DeserializePayloadAsync<TPayload>()
+        /// <summary>
+        /// Deserializes the JSON request payload into the specified type. Throws
+        /// an exception if no payload is present or it cannot be deserialized.
+        /// </summary>
+        public async Task<TPayload> DeserializeJsonAsync<TPayload>()
         {
             if (!this.HasEntityBody)
             {

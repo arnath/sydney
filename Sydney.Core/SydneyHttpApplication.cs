@@ -37,16 +37,17 @@
             {
                 this.logger.LogError(
                     exception,
-                    $"Unexpected exception handling context, exception: {exception}");
+                    "Unexpected exception handling context, exception: {Exception}.",
+                    exception);
             }
         }
 
         public async Task ProcessRequestAsync(HttpContext context)
         {
             // Try to match the incoming URL to a handler.
-            if (!this.router.TryMatchPath(context.Request.Path.Value, out RouteMatch match))
+            if (!this.router.TryMatchRoute(context.Request.Path.Value, out RouteMatch match))
             {
-                this.logger.LogWarning($"No matching handler found for incoming request url: {context.Request.Path}.");
+                this.logger.LogWarning("No matching handler found for incoming request url: {Path}.", context.Request.Path);
 
                 // If we couldn't, return a 404.
                 context.Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -63,7 +64,10 @@
                     this.returnExceptionMessagesInResponse);
 
             // Write the response to context.Response.
+            string jsonPayload = response.JsonSerializedPayload;
             context.Response.StatusCode = (int)response.StatusCode;
+            context.Response.ContentType = ApplicationJsonContentType;
+            context.Response.ContentLength = jsonPayload.Length;
             foreach (KeyValuePair<string, string> header in response.Headers)
             {
                 context.Response.Headers.Add(header.Key, header.Value);
@@ -72,18 +76,8 @@
             // Lock headers and status code.
             await context.Response.StartAsync();
 
-            if (response.Payload != null)
-            {
-                string jsonPayload = JsonSerializer.ToJsonString(response.Payload);
-                
-                context.Response.ContentType = ApplicationJsonContentType;
-                context.Response.ContentLength = jsonPayload.Length;
-                await context.Response.WriteAsync(jsonPayload);
-            }
-            else
-            {
-                context.Response.ContentLength = 0;
-            }
+            // Write payload (which might be empty).
+            await context.Response.WriteAsync(jsonPayload);
 
             // Close the response to send it back to the client.
             await context.Response.CompleteAsync();

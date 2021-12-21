@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Net;
+    using Utf8Json;
 
     public class SydneyResponse
     {
@@ -44,5 +45,22 @@
         /// Gets a collection of key/value pairs for headers to add to the response.
         /// </summary>
         public IDictionary<string, string> Headers { get; }
+
+        /// <summary>
+        /// Gets the payload as a JSON serialized string. If there is no payload,
+        /// returns an empty string;
+        /// </summary>
+        internal string JsonSerializedPayload
+        {
+            get
+            {
+                if (this.Payload == null)
+                {
+                    return string.Empty;
+                }
+
+                return JsonSerializer.ToJsonString(this.Payload);
+            }
+        }
     }
 }

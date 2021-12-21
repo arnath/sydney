@@ -59,7 +59,7 @@
             {
                 // You can deserialize a request payload by calling request.DeserializePayloadAsync<T>().
                 // This will deserialize a JSON payload into whatever type you have defined. 
-                dynamic payload = await request.DeserializePayloadAsync<dynamic>();
+                dynamic payload = await request.DeserializeJsonAsync<dynamic>();
 
                 if (payload == null)
                 {

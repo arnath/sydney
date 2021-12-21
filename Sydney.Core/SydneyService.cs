@@ -65,10 +65,10 @@
 
             this.runningTaskCompletionSource = new TaskCompletionSource();
 
-            this.logger.LogInformation("Starting service, press Ctrl-C to stop ...");
+            this.logger.LogInformation("Listening on http://0.0.0.0:{Port}, press Ctrl-C to stop ...", config.Port);
             foreach (string route in this.router.Routes)
             {
-                this.logger.LogInformation($"Registered route: {route}");
+                this.logger.LogInformation("Registered route: /{Route}/", route);
             }
 
             // Set up Ctrl-Break and Ctrl-C handler.

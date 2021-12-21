@@ -25,7 +25,7 @@
         {
             // Check if there's already an existing handler for the same route
             // (this will catch same route with different parameter names).
-            if (this.TryMatchPath(route, out _))
+            if (this.TryMatchRoute(route, out _))
             {
                 throw new ArgumentException("There is already a registered handler for this route.", nameof(route));
             }
@@ -70,7 +70,7 @@
             this.routes.Add(route);
         }
 
-        public bool TryMatchPath(string? path, out RouteMatch match)
+        public bool TryMatchRoute(string? path, out RouteMatch match)
         {
             match = default;
             if (path == null)
