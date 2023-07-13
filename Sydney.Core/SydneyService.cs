@@ -1,6 +1,7 @@
 ﻿namespace Sydney.Core
 {
     using System;
+    using System.IO;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
@@ -105,11 +106,11 @@
             Console.CancelKeyPress -= this.HandleControlC;
         }
 
-        public void AddRoute(string route, RestHandlerBase handler)
+        public void AddRestHandler(string path, RestHandlerBase handler)
         {
-            if (route == null)
+            if (path == null)
             {
-                throw new ArgumentNullException(nameof(route));
+                throw new ArgumentNullException(nameof(path));
             }
 
             if (handler == null)
@@ -119,11 +120,35 @@
 
             if (this.runningTaskCompletionSource != null)
             {
-                throw new InvalidOperationException("Cannot add a route after the service has been started.");
+                throw new InvalidOperationException("Cannot add a handler after the service has been started.");
             }
 
-            // Trim leading and trailing slashes from the route.
-            this.router.AddRoute(route.Trim('/'), handler);
+            this.router.AddRoute(path, handler);
+        }
+
+        public void AddResourceHandler(string collectionPath, ResourceHandlerBase handler)
+        {
+            if (collectionPath == null)
+            {
+                throw new ArgumentNullException(nameof(collectionPath));
+            }
+
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            if (this.runningTaskCompletionSource != null)
+            {
+                throw new InvalidOperationException("Cannot add a handler after the service has been started.");
+            }
+
+            // Trim leading and trailing slashes from the path. We do this
+            // here because we need the path to be uniform to modify it later.
+            collectionPath = collectionPath.Trim('/');
+
+            this.router.AddRoute(collectionPath, handler.CollectionHandler);
+            this.router.AddRoute($"{collectionPath}/{{id}}", handler.ResourceHandler);
         }
 
         public void Dispose()

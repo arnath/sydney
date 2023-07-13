@@ -23,6 +23,9 @@
 
         public void AddRoute(string route, RestHandlerBase handler)
         {
+            // Trim leading and trailing slashes from the route.
+            route = route.Trim('/');
+
             // Check if there's already an existing handler for the same route
             // (this will catch same route with different parameter names).
             if (this.TryMatchRoute(route, out _))
@@ -135,7 +138,7 @@
 
         private static string[] GetUrlSegments(string url)
         {
-            return url.Trim('/').Split('/');
+            return url.Split('/');
         }
 
         private static bool TryGetParameterName(string segment, out string? parameterName)
