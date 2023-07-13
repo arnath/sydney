@@ -9,7 +9,6 @@
     using Microsoft.AspNetCore.Http.Features;
     using Microsoft.Extensions.Logging;
     using Sydney.Core.Routing;
-    using Utf8Json;
 
     internal class SydneyHttpApplication : IHttpApplication<HttpContext>
     {

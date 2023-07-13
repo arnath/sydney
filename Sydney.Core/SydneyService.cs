@@ -1,23 +1,24 @@
 ﻿namespace Sydney.Core
 {
     using System;
-    using System.Collections.Generic;
-    using System.Net;
+    using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Microsoft.AspNetCore.Hosting.Server;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Http.Features;
     using Microsoft.AspNetCore.Server.Kestrel.Core;
     using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Sydney.Core.Routing;
-    using Utf8Json;
 
     public class SydneyService : IDisposable
     {
+        public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
+        };
+
         private readonly SydneyServiceConfig config;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger logger;

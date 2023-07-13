@@ -4,9 +4,9 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Net;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
-    using Utf8Json;
 
     public class SydneyRequest
     {
@@ -98,7 +98,9 @@
                     this.PayloadStream.Seek(0, SeekOrigin.Begin);
                 }
 
-                TPayload payload = await JsonSerializer.DeserializeAsync<TPayload>(this.PayloadStream);
+                TPayload payload = await JsonSerializer.DeserializeAsync<TPayload>(
+                    this.PayloadStream,
+                    SydneyService.DefaultJsonSerializerOptions);
 
                 deserializedPayloads[payloadType] = payload;
 
