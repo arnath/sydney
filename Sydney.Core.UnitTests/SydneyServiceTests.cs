@@ -75,7 +75,7 @@
             RestHandlerBase handler = A.Fake<RestHandlerBase>();
             SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
 
-            Exception exception = Record.Exception(() => service.AddRoute(null, handler));
+            Exception exception = Record.Exception(() => service.AddRestHandler(null, handler));
 
             ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
             Assert.Equal("route", argumentNullException.ParamName);
@@ -87,7 +87,7 @@
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
 
-            Exception exception = Record.Exception(() => service.AddRoute("/foo/bar", null));
+            Exception exception = Record.Exception(() => service.AddRestHandler("/foo/bar", null));
 
             ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
             Assert.Equal("handler", argumentNullException.ParamName);
@@ -102,7 +102,7 @@
 
             // Don't await start because it never returns.
             service.StartAsync();
-            Exception exception = Record.Exception(() => service.AddRoute("/foo/bar", handler));
+            Exception exception = Record.Exception(() => service.AddRestHandler("/foo/bar", handler));
             await service.StopAsync();
 
             Assert.IsType<InvalidOperationException>(exception);

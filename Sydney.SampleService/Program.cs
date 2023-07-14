@@ -6,6 +6,7 @@
     using Sydney.Core;
     using Microsoft.Extensions.Logging;
     using Serilog;
+    using System.Collections.Generic;
 
     public class Program
     {
@@ -20,10 +21,12 @@
 
             using (SydneyService service = new SydneyService(config, loggerFactory))
             {
-                service.AddRoute("/books/", new BooksHandler(loggerFactory));
+                service.AddRestHandler("/books/", new BooksHandler(loggerFactory));
 
                 // Routes can have path parameters by enclosing a name in braces.
-                service.AddRoute("/users/{id}", new UserHandler(loggerFactory));
+                service.AddRestHandler("/users/{id}", new UserHandler(loggerFactory));
+
+                service.AddResourceHandler("/posts", new PostsHandler(loggerFactory));
 
                 // Blocks until Ctrl+C or SIGBREAK is received.
                 await service.StartAsync();
@@ -78,6 +81,26 @@
         private class UserHandler : RestHandlerBase
         {
             public UserHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+        }
+
+        private class PostsHandler : ResourceHandlerBase
+        {
+            private readonly List<dynamic> posts = new List<dynamic>();
+
+            public PostsHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+
+            protected override Task<SydneyResponse> ListAsync(SydneyRequest request)
+            {
+                return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, posts));
+            }
+
+            protected override Task<SydneyResponse> CreateAsync(SydneyRequest request)
+            {
+                dynamic post = new { Title = "foo", Description = "bar" };
+                this.posts.Add(post);
+
+                return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, post));
+            }
         }
     }
 }
