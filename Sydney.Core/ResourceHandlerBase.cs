@@ -1,16 +1,13 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-
-namespace Sydney.Core
+﻿namespace Sydney.Core
 {
-    public class ResourceHandlerBase
-    {
-        private readonly ILogger logger;
+    using System;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
 
+    public abstract class ResourceHandlerBase
+    {
         public ResourceHandlerBase(ILoggerFactory loggerFactory)
         {
-            this.logger = loggerFactory.CreateLogger<RestHandlerBase>();
             this.CollectionHandler = new CollectionHandlerImpl(loggerFactory, this);
             this.ResourceHandler = new ResourceHandlerImpl(loggerFactory, this);
         }
