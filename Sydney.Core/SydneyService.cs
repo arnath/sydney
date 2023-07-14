@@ -143,8 +143,7 @@
                 throw new InvalidOperationException("Cannot add a handler after the service has been started.");
             }
 
-            // Trim leading and trailing slashes from the path. We do this
-            // here because we need the path to be uniform to modify it later.
+            // Trim leading and trailing slashes from the path.
             collectionPath = collectionPath.Trim('/');
 
             this.router.AddRoute(collectionPath, handler.CollectionHandler);

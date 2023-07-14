@@ -69,7 +69,7 @@
         }
 
         [Fact]
-        public void AddRouteThrowsArgumentNullExceptionWhenRouteIsNull()
+        public void AddRestHandlerThrowsArgumentNullExceptionWhenPathIsNull()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             RestHandlerBase handler = A.Fake<RestHandlerBase>();
@@ -78,11 +78,11 @@
             Exception exception = Record.Exception(() => service.AddRestHandler(null, handler));
 
             ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
-            Assert.Equal("route", argumentNullException.ParamName);
+            Assert.Equal("path", argumentNullException.ParamName);
         }
 
         [Fact]
-        public void AddRouteThrowsArgumentNullExceptionWhenHandlerIsNull()
+        public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
@@ -94,7 +94,7 @@
         }
 
         [Fact]
-        public async void AddRouteThrowsInvalidOperationExceptionWhenServiceIsRunning()
+        public async void AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             RestHandlerBase handler = A.Fake<RestHandlerBase>();
@@ -107,7 +107,7 @@
 
             Assert.IsType<InvalidOperationException>(exception);
             Assert.Equal(
-                "Cannot add a route after the service has been started.",
+                "Cannot add a handler after the service has been started.",
                 exception.Message);
         }
     }

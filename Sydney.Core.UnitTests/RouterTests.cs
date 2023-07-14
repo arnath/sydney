@@ -91,23 +91,23 @@ namespace Sydney.Core.UnitTests
         }
 
         [Fact]
-        public void MatchPathDoesNotMatchSubPath()
+        public void MatchRouteDoesNotMatchSubPath()
         {
             this.router.AddRoute("/three/level/path", this.handler);
             Assert.False(this.router.TryMatchRoute("/three/level/path/plusone", out _));
         }
 
         [Fact]
-        public void MatchPathMatchesExactPath()
+        public void MatchRouteMatchesExactPath()
         {
             this.router.AddRoute("/three/level/path", this.handler);
             Assert.True(this.router.TryMatchRoute("/three/level/path", out RouteMatch match));
             Assert.Equal(this.handler, match.Handler);
-            Assert.Equal(0, match.PathParameters.Count);
+            Assert.Empty(match.PathParameters);
         }
 
         [Fact]
-        public void MatchPathParametersMatchEverything()
+        public void MatchRouteParametersMatchEverything()
         {
             this.router.AddRoute("/this/{noun}/is/{adj}", this.handler);
             
@@ -125,7 +125,7 @@ namespace Sydney.Core.UnitTests
         }
 
         [Fact]
-        public void MatchPathTrimsLeadingAndTrailingSlashes()
+        public void MatchRouteTrimsLeadingAndTrailingSlashes()
         {
             this.router.AddRoute("/three/level/path", this.handler);
             Assert.True(
@@ -133,7 +133,7 @@ namespace Sydney.Core.UnitTests
                     "/////three/level/path///////",
                     out RouteMatch match));
             Assert.Equal(this.handler, match.Handler);
-            Assert.Equal(0, match.PathParameters.Count);
+            Assert.Empty(match.PathParameters);
         }
 
         private static RouteNode GetRouteGraphRoot(Router router)

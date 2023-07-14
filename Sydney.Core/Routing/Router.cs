@@ -23,9 +23,6 @@
 
         public void AddRoute(string route, RestHandlerBase handler)
         {
-            // Trim leading and trailing slashes from the route.
-            route = route.Trim('/');
-
             // Check if there's already an existing handler for the same route
             // (this will catch same route with different parameter names).
             if (this.TryMatchRoute(route, out _))
@@ -33,7 +30,10 @@
                 throw new ArgumentException("There is already a registered handler for this route.", nameof(route));
             }
 
-            string[] segments = GetUrlSegments(route);
+            // Trim leading and trailing slashes from the path.
+            route = route.Trim('/');
+
+            string[] segments = route.Split('/');
             HashSet<string> parameterNames = new HashSet<string>();
             RouteNode node = this.root;
             for (int i = 0; i < segments.Length; i++)
@@ -81,8 +81,10 @@
                 return false;
             }
 
+            path = path.Trim('/');
+
             // Try to find a matching handler node for this path.
-            string[] segments = GetUrlSegments(path);
+            string[] segments = path.Split('/');
             HandlerRouteNode? handlerNode = this.MatchPathRecursive(this.root, segments, -1);
             if (handlerNode != null)
             {
@@ -134,11 +136,6 @@
             }
 
             return null;
-        }
-
-        private static string[] GetUrlSegments(string url)
-        {
-            return url.Split('/');
         }
 
         private static bool TryGetParameterName(string segment, out string? parameterName)
