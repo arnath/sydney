@@ -1,19 +1,15 @@
 ﻿namespace Sydney.Core.UnitTests
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
     using System.Net;
-    using System.Text;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using FakeItEasy;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Features;
-    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Sydney.Core.Routing;
-    using Utf8Json;
     using Xunit;
 
     public class SydneyHttpApplicationTests
@@ -112,7 +108,7 @@
 
             await httpApplication.ProcessRequestAsync(context);
 
-            string jsonPayload = JsonSerializer.ToJsonString(payload);
+            string jsonPayload = JsonSerializer.Serialize(payload);
             Assert.Equal(jsonPayload.Length, context.Response.ContentLength);
             context.Response.Body.Seek(0, SeekOrigin.Begin);
             using (StreamReader reader = new StreamReader(context.Response.Body))

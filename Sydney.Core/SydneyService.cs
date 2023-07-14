@@ -1,23 +1,25 @@
 ﻿namespace Sydney.Core
 {
     using System;
-    using System.Collections.Generic;
-    using System.Net;
+    using System.IO;
+    using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Microsoft.AspNetCore.Hosting.Server;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Http.Features;
     using Microsoft.AspNetCore.Server.Kestrel.Core;
     using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Sydney.Core.Routing;
-    using Utf8Json;
 
     public class SydneyService : IDisposable
     {
+        public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
+        };
+
         private readonly SydneyServiceConfig config;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger logger;
@@ -104,11 +106,11 @@
             Console.CancelKeyPress -= this.HandleControlC;
         }
 
-        public void AddRoute(string route, RestHandlerBase handler)
+        public void AddRestHandler(string path, RestHandlerBase handler)
         {
-            if (route == null)
+            if (path == null)
             {
-                throw new ArgumentNullException(nameof(route));
+                throw new ArgumentNullException(nameof(path));
             }
 
             if (handler == null)
@@ -118,11 +120,34 @@
 
             if (this.runningTaskCompletionSource != null)
             {
-                throw new InvalidOperationException("Cannot add a route after the service has been started.");
+                throw new InvalidOperationException("Cannot add a handler after the service has been started.");
             }
 
-            // Trim leading and trailing slashes from the route.
-            this.router.AddRoute(route.Trim('/'), handler);
+            this.router.AddRoute(path, handler);
+        }
+
+        public void AddResourceHandler(string collectionPath, ResourceHandlerBase handler)
+        {
+            if (collectionPath == null)
+            {
+                throw new ArgumentNullException(nameof(collectionPath));
+            }
+
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            if (this.runningTaskCompletionSource != null)
+            {
+                throw new InvalidOperationException("Cannot add a handler after the service has been started.");
+            }
+
+            // Trim leading and trailing slashes from the path.
+            collectionPath = collectionPath.Trim('/');
+
+            this.router.AddRoute(collectionPath, handler.CollectionHandler);
+            this.router.AddRoute($"{collectionPath}/{{id}}", handler.ResourceHandler);
         }
 
         public void Dispose()

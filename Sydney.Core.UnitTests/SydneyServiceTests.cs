@@ -69,32 +69,32 @@
         }
 
         [Fact]
-        public void AddRouteThrowsArgumentNullExceptionWhenRouteIsNull()
+        public void AddRestHandlerThrowsArgumentNullExceptionWhenPathIsNull()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             RestHandlerBase handler = A.Fake<RestHandlerBase>();
             SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
 
-            Exception exception = Record.Exception(() => service.AddRoute(null, handler));
+            Exception exception = Record.Exception(() => service.AddRestHandler(null, handler));
 
             ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
-            Assert.Equal("route", argumentNullException.ParamName);
+            Assert.Equal("path", argumentNullException.ParamName);
         }
 
         [Fact]
-        public void AddRouteThrowsArgumentNullExceptionWhenHandlerIsNull()
+        public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
 
-            Exception exception = Record.Exception(() => service.AddRoute("/foo/bar", null));
+            Exception exception = Record.Exception(() => service.AddRestHandler("/foo/bar", null));
 
             ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
             Assert.Equal("handler", argumentNullException.ParamName);
         }
 
         [Fact]
-        public async void AddRouteThrowsInvalidOperationExceptionWhenServiceIsRunning()
+        public async void AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             RestHandlerBase handler = A.Fake<RestHandlerBase>();
@@ -102,12 +102,12 @@
 
             // Don't await start because it never returns.
             service.StartAsync();
-            Exception exception = Record.Exception(() => service.AddRoute("/foo/bar", handler));
+            Exception exception = Record.Exception(() => service.AddRestHandler("/foo/bar", handler));
             await service.StopAsync();
 
             Assert.IsType<InvalidOperationException>(exception);
             Assert.Equal(
-                "Cannot add a route after the service has been started.",
+                "Cannot add a handler after the service has been started.",
                 exception.Message);
         }
     }

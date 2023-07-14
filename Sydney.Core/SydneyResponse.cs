@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Net;
-    using Utf8Json;
+    using System.Text.Json;
 
     public class SydneyResponse
     {
@@ -59,7 +59,7 @@
                     return string.Empty;
                 }
 
-                return JsonSerializer.ToJsonString(this.Payload);
+                return JsonSerializer.Serialize(this.Payload);
             }
         }
     }
