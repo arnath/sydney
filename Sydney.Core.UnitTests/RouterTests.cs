@@ -1,4 +1,4 @@
-namespace Sydney.Core.UnitTests
+﻿namespace Sydney.Core.UnitTests
 {
     using System;
     using System.Linq;
@@ -23,7 +23,7 @@ namespace Sydney.Core.UnitTests
         [Fact]
         public void AddRouteSegmentsMustBeAtLeastOneCharacter()
         {
-            ArgumentException exception = 
+            ArgumentException exception =
                 Assert.Throws<ArgumentException>(
                     () => this.router.AddRoute("/users//profile", this.handler));
             Assert.Equal(
@@ -34,7 +34,7 @@ namespace Sydney.Core.UnitTests
         [Fact]
         public void AddRouteCannotUseSameParameterTwice()
         {
-            ArgumentException exception = 
+            ArgumentException exception =
                 Assert.Throws<ArgumentException>(
                     () => this.router.AddRoute("/users/{id}/messages/{id}", this.handler));
             Assert.Equal(
@@ -110,7 +110,7 @@ namespace Sydney.Core.UnitTests
         public void MatchRouteParametersMatchEverything()
         {
             this.router.AddRoute("/this/{noun}/is/{adj}", this.handler);
-            
+
             Assert.True(this.router.TryMatchRoute("/this/guy/is/wack", out RouteMatch match));
             Assert.Equal(this.handler, match.Handler);
             Assert.Equal(2, match.PathParameters.Count);
@@ -138,7 +138,7 @@ namespace Sydney.Core.UnitTests
 
         private static RouteNode GetRouteGraphRoot(Router router)
         {
-            FieldInfo fieldInfo = 
+            FieldInfo fieldInfo =
                 router.GetType().GetField(
                     "root",
                     BindingFlags.NonPublic | BindingFlags.Instance);

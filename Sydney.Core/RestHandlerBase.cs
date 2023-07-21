@@ -1,10 +1,10 @@
 ﻿namespace Sydney.Core
 {
-    using Microsoft.Extensions.Logging;
     using System;
     using System.Diagnostics;
     using System.Net;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
 
     public abstract class RestHandlerBase
     {
@@ -12,7 +12,7 @@
 
         protected RestHandlerBase(ILoggerFactory loggerFactory)
         {
-            this.logger = loggerFactory.CreateLogger<RestHandlerBase>();            
+            this.logger = loggerFactory.CreateLogger<RestHandlerBase>();
         }
 
         internal virtual async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, bool returnExceptionMessagesInResponse)

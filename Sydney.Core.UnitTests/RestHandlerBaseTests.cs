@@ -105,7 +105,7 @@
         public void ExceptionMessageIsReturnedInPayloadWhenReturnExceptionMessagesInResponseIsTrue()
         {
             string expectedExceptionMessage = "Here's an exception!";
-            
+
             HttpRequest httpRequest = A.Fake<HttpRequest>();
             httpRequest.Method = "GET";
             SydneyRequest request = new SydneyRequest(httpRequest, new Dictionary<string, string>());

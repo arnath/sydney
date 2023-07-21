@@ -1,12 +1,12 @@
 ﻿namespace Sydney.SampleService
 {
     using System;
+    using System.Collections.Generic;
     using System.Net;
     using System.Threading.Tasks;
-    using Sydney.Core;
     using Microsoft.Extensions.Logging;
     using Serilog;
-    using System.Collections.Generic;
+    using Sydney.Core;
 
     public class Program
     {
@@ -36,7 +36,7 @@
         // Declare a handler class that inherits from RestHandlerBase.
         private class BooksHandler : RestHandlerBase
         {
-            public BooksHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+            public BooksHandler(ILoggerFactory loggerFactory) : base(loggerFactory) { }
 
             // Override the functions for the HTTP methods you want to handle (the rest 
             // will return HTTP 405).
@@ -80,14 +80,14 @@
 
         private class UserHandler : RestHandlerBase
         {
-            public UserHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+            public UserHandler(ILoggerFactory loggerFactory) : base(loggerFactory) { }
         }
 
         private class PostsHandler : ResourceHandlerBase
         {
             private readonly List<dynamic> posts = new List<dynamic>();
 
-            public PostsHandler(ILoggerFactory loggerFactory) : base(loggerFactory) {}
+            public PostsHandler(ILoggerFactory loggerFactory) : base(loggerFactory) { }
 
             protected override Task<SydneyResponse> ListAsync(SydneyRequest request)
             {

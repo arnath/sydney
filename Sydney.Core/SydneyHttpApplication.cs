@@ -13,7 +13,7 @@
     internal class SydneyHttpApplication : IHttpApplication<HttpContext>
     {
         private const string ApplicationJsonContentType = "application/json; charset=utf-8";
-        
+
         private readonly Router router;
         private readonly bool returnExceptionMessagesInResponse;
         private readonly ILogger logger;
