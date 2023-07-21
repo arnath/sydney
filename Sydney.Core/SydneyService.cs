@@ -17,6 +17,7 @@
         public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
         };
 
         private readonly SydneyServiceConfig config;
