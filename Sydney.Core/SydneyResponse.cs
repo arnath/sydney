@@ -59,7 +59,7 @@
                     return string.Empty;
                 }
 
-                return JsonSerializer.Serialize(this.Payload);
+                return JsonSerializer.Serialize(this.Payload, SydneyService.DefaultJsonSerializerOptions);
             }
         }
     }

@@ -108,7 +108,7 @@
 
             await httpApplication.ProcessRequestAsync(context);
 
-            string jsonPayload = JsonSerializer.Serialize(payload);
+            string jsonPayload = JsonSerializer.Serialize(payload, SydneyService.DefaultJsonSerializerOptions);
             Assert.Equal(jsonPayload.Length, context.Response.ContentLength);
             context.Response.Body.Seek(0, SeekOrigin.Begin);
             using (StreamReader reader = new StreamReader(context.Response.Body))
