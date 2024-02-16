@@ -351,3 +351,6 @@ MigrationBackup/
 
 # This file keeps getting added by Visual Studio.
 Sydney.Core/Properties/launchSettings.json
+
+# Mac stuff
+.DS_Store
