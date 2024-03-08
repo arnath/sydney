@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sydney.Core", "Sydney.Core\Sydney.Core.csproj", "{6AF0752F-7631-4532-912E-288498D9A91F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sydney.Core", "Sydney.Core\Sydney.Core.csproj", "{6AF0752F-7631-4532-912E-288498D9A91F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sydney.SampleService", "Sydney.SampleService\Sydney.SampleService.csproj", "{8D549D1A-9D0E-4928-8B88-51EA9713B12D}"
 EndProject
@@ -11,11 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
-		CodeAnalysis.ruleset = CodeAnalysis.ruleset
 		LICENSE = LICENSE
 		.github\workflows\pr-ci.yml = .github\workflows\pr-ci.yml
-		.github\workflows\push-ci.yml = .github\workflows\push-ci.yml
 		README.md = README.md
+		.github\workflows\ci.yml = .github\workflows\ci.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sydney.Core.UnitTests", "Sydney.Core.UnitTests\Sydney.Core.UnitTests.csproj", "{09E21308-B39C-4593-B9BF-1F27FEB3179B}"
