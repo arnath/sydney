@@ -16,15 +16,15 @@
 
         public RestHandlerBase ResourceHandler { get; }
 
-        protected virtual Task<SydneyResponse> ListAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> ListAsync(SydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> GetAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> GetAsync(SydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> CreateAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> CreateAsync(SydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> UpdateAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> UpdateAsync(SydneyRequest request) => throw new NotImplementedException();
 
-        protected virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) => throw new NotImplementedException();
 
         private class ResourceHandlerImpl : RestHandlerBase
         {
@@ -35,16 +35,16 @@
                 this.parent = parent;
             }
 
-            protected override Task<SydneyResponse> GetAsync(SydneyRequest request)
+            public override Task<SydneyResponse> GetAsync(SydneyRequest request)
                 => this.parent.GetAsync(request);
 
-            protected override Task<SydneyResponse> PutAsync(SydneyRequest request)
+            public override Task<SydneyResponse> PutAsync(SydneyRequest request)
                 => this.parent.UpdateAsync(request);
 
-            protected override Task<SydneyResponse> PatchAsync(SydneyRequest request)
+            public override Task<SydneyResponse> PatchAsync(SydneyRequest request)
                 => this.parent.UpdateAsync(request);
 
-            protected override Task<SydneyResponse> DeleteAsync(SydneyRequest request)
+            public override Task<SydneyResponse> DeleteAsync(SydneyRequest request)
                 => this.parent.DeleteAsync(request);
         }
 
@@ -57,10 +57,10 @@
                 this.parent = parent;
             }
 
-            protected override Task<SydneyResponse> GetAsync(SydneyRequest request)
+            public override Task<SydneyResponse> GetAsync(SydneyRequest request)
                 => this.parent.ListAsync(request);
 
-            protected override Task<SydneyResponse> PostAsync(SydneyRequest request)
+            public override Task<SydneyResponse> PostAsync(SydneyRequest request)
                 => this.parent.CreateAsync(request);
         }
     }

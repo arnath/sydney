@@ -43,7 +43,7 @@
 
             // Override the functions for the HTTP methods you want to handle (the rest 
             // will return HTTP 405).
-            protected override Task<SydneyResponse> ListAsync(SydneyRequest request)
+            public override Task<SydneyResponse> ListAsync(SydneyRequest request)
             {
                 // Handlers must either return a SydneyResponse or throw an exception.
                 // A SydneyResponse contains an HttpStatusCode and an optional payload
@@ -52,7 +52,7 @@
                 return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, posts));
             }
 
-            protected override async Task<SydneyResponse> CreateAsync(SydneyRequest request)
+            public override async Task<SydneyResponse> CreateAsync(SydneyRequest request)
             {
                 // You can deserialize a request payload by calling request.DeserializeJsonAsync<T>().
                 // This will deserialize a JSON payload into whatever type you have defined. 
@@ -77,7 +77,7 @@
                 return response;
             }
 
-            protected override Task<SydneyResponse> GetAsync(SydneyRequest request)
+            public override Task<SydneyResponse> GetAsync(SydneyRequest request)
             {
                 // Throwing any other uncaught exception from your handler will
                 // return HTTP 500 and optionally the message as a response payload.
@@ -95,7 +95,7 @@
             private readonly List<dynamic> books = new();
 
             // Handles GET requests.
-            protected override Task<SydneyResponse> GetAsync(SydneyRequest request)
+            public override Task<SydneyResponse> GetAsync(SydneyRequest request)
             {
                 // You can retrieve path parameters using the request.PathParameters
                 // dictionary. They are parsed as strings so you will need to convert
@@ -106,7 +106,7 @@
             }
 
             // Handles OPTIONS requests.
-            protected override Task<SydneyResponse> OptionsAsync(SydneyRequest request)
+            public override Task<SydneyResponse> OptionsAsync(SydneyRequest request)
             {
                 return Task.FromResult(new SydneyResponse(HttpStatusCode.Accepted));
             }
