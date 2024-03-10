@@ -102,18 +102,18 @@
             }
         }
 
-        public virtual Task<SydneyResponse> GetAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> GetAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> PostAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> PostAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> DeleteAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> PutAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> PutAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> HeadAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> HeadAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> PatchAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> PatchAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> OptionsAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> OptionsAsync(ISydneyRequest request) => throw new NotImplementedException();
     }
 }

@@ -4,7 +4,7 @@
     using System.Net;
     using System.Text.Json;
 
-    public class SydneyResponse : ISydneyResponse
+    public class SydneyResponse
     {
         /// <summary>
         /// Creates a new instance of the SydneyResponse class with the specified
