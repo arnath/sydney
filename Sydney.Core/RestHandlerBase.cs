@@ -57,7 +57,7 @@
                 }
 
                 this.logger.LogInformation(
-                    "Request Complete: path={Path}, method={Method}, status code={StatusCode}, time={ElapsedMilliseconds}ms.",
+                    "Request Complete: path={Path}, method={Method}, status code={StatusCode}, elapsed={ElapsedMilliseconds}ms.",
                     request.Path,
                     request.HttpMethod,
                     response.StatusCode,
@@ -71,19 +71,21 @@
                 switch (exception)
                 {
                     case HttpResponseException hre:
-                        this.logger.LogWarning(
-                            hre,
-                            "Request failed after {Elapsed}, status code: {StatusCode}, exception: {Exception}",
-                            stopwatch.Elapsed,
+                        this.logger.LogInformation(
+                            "Request Failed: path={Path}, method={Method}, status code={StatusCode}, elapsed={ElapsedMilliseconds}ms, message={Message}",
+                            request.Path,
+                            request.HttpMethod,
                             hre.StatusCode,
-                            hre);
+                            stopwatch.ElapsedMilliseconds,
+                            hre.Message);
                         statusCode = hre.StatusCode;
                         break;
 
                     case NotImplementedException nie:
                         this.logger.LogWarning(
                             nie,
-                            "Request made for unsupported HTTP method {HttpMethod}.",
+                            "Request Failed (method not allowed): path={Path}, method={Method}",
+                            request.Path,
                             request.HttpMethod);
                         statusCode = HttpStatusCode.MethodNotAllowed;
                         break;
@@ -91,8 +93,10 @@
                     default:
                         this.logger.LogError(
                             exception,
-                            "Unexpected exception processing request after {Elapsed}, exception: {Exception}",
-                            stopwatch.Elapsed,
+                            "Request Failed: path={Path}, method={Method}, elapsed={Elapsed}ms, exception={Exception}",
+                            request.Path,
+                            request.HttpMethod,
+                            stopwatch.ElapsedMilliseconds,
                             exception);
                         break;
                 }
