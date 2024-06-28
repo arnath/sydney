@@ -57,9 +57,11 @@
                 }
 
                 this.logger.LogInformation(
-                    "Request completed after {Elapsed}, status code: {StatusCode}.",
-                    stopwatch.Elapsed,
-                    response.StatusCode);
+                    "Request Complete: path={Path}, method={Method}, status code={StatusCode}, time={ElapsedMilliseconds}ms.",
+                    request.Path,
+                    request.HttpMethod,
+                    response.StatusCode,
+                    stopwatch.ElapsedMilliseconds);
 
                 return response;
             }

@@ -45,6 +45,8 @@
 
         public long ContentLength => this.httpRequest.ContentLength.GetValueOrDefault();
 
+        public string Path => this.httpRequest.Path;
+
         public Stream PayloadStream => this.httpRequest.Body;
 
         public async Task<TPayload> DeserializeJsonAsync<TPayload>()
