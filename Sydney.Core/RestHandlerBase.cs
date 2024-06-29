@@ -17,6 +17,11 @@
 
         internal virtual async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, bool returnExceptionMessagesInResponse)
         {
+            this.logger.LogInformation(
+                "Request Received: path={Path}, method={Method}.",
+                request.Path,
+                request.HttpMethod);
+
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             try
