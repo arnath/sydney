@@ -17,6 +17,11 @@
 
         internal virtual async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, bool returnExceptionMessagesInResponse)
         {
+            this.logger.LogInformation(
+                "Request Received: path={Path}, method={Method}.",
+                request.Path,
+                request.HttpMethod);
+
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             try
@@ -57,9 +62,11 @@
                 }
 
                 this.logger.LogInformation(
-                    "Request completed after {Elapsed}, status code: {StatusCode}.",
-                    stopwatch.Elapsed,
-                    response.StatusCode);
+                    "Request Complete: path={Path}, method={Method}, status code={StatusCode}, elapsed={ElapsedMilliseconds}ms.",
+                    request.Path,
+                    request.HttpMethod,
+                    response.StatusCode,
+                    stopwatch.ElapsedMilliseconds);
 
                 return response;
             }
@@ -69,19 +76,21 @@
                 switch (exception)
                 {
                     case HttpResponseException hre:
-                        this.logger.LogWarning(
-                            hre,
-                            "Request failed after {Elapsed}, status code: {StatusCode}, exception: {Exception}",
-                            stopwatch.Elapsed,
+                        this.logger.LogInformation(
+                            "Request Failed: path={Path}, method={Method}, status code={StatusCode}, elapsed={ElapsedMilliseconds}ms, message={Message}",
+                            request.Path,
+                            request.HttpMethod,
                             hre.StatusCode,
-                            hre);
+                            stopwatch.ElapsedMilliseconds,
+                            hre.Message);
                         statusCode = hre.StatusCode;
                         break;
 
                     case NotImplementedException nie:
                         this.logger.LogWarning(
                             nie,
-                            "Request made for unsupported HTTP method {HttpMethod}.",
+                            "Request Failed (method not allowed): path={Path}, method={Method}",
+                            request.Path,
                             request.HttpMethod);
                         statusCode = HttpStatusCode.MethodNotAllowed;
                         break;
@@ -89,8 +98,10 @@
                     default:
                         this.logger.LogError(
                             exception,
-                            "Unexpected exception processing request after {Elapsed}, exception: {Exception}",
-                            stopwatch.Elapsed,
+                            "Request Failed: path={Path}, method={Method}, elapsed={Elapsed}ms, exception={Exception}",
+                            request.Path,
+                            request.HttpMethod,
+                            stopwatch.ElapsedMilliseconds,
                             exception);
                         break;
                 }
@@ -102,18 +113,18 @@
             }
         }
 
-        public virtual Task<SydneyResponse> GetAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> GetAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> PostAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> PostAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> DeleteAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> PutAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> PutAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> HeadAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> HeadAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> PatchAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> PatchAsync(ISydneyRequest request) => throw new NotImplementedException();
 
-        public virtual Task<SydneyResponse> OptionsAsync(SydneyRequest request) => throw new NotImplementedException();
+        public virtual Task<SydneyResponse> OptionsAsync(ISydneyRequest request) => throw new NotImplementedException();
     }
 }

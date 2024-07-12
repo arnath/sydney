@@ -8,7 +8,7 @@
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
 
-    public class SydneyRequest
+    public class SydneyRequest : ISydneyRequest
     {
         private readonly HttpRequest httpRequest;
 
@@ -29,55 +29,26 @@
             this.HttpMethod = httpMethod;
         }
 
-        /// <summary>
-        /// Gets the HTTP method specified by the client.
-        /// </summary>
         public HttpMethod HttpMethod { get; }
 
-        /// <summary>
-        /// Gets the value of the Content-Type header.
-        /// </summary>
         public string? ContentType => this.httpRequest.ContentType;
 
-        /// <summary>
-        /// Gets the parsed path parameters from the incoming client request.
-        /// </summary>
         public IDictionary<string, string> PathParameters { get; }
 
-        /// <summary>
-        /// Gets a boolean value indicating whether the request is using HTTPs.
-        /// </summary>
         public bool IsHttps => this.httpRequest.IsHttps;
 
-        /// <summary>
-        /// Gets the collection of headers sent in the request.
-        /// </summary>
         public IHeaderDictionary Headers => this.httpRequest.Headers;
 
-        /// <summary>
-        /// Gets the parsed query string parameters sent in the request.
-        /// </summary>
         public IQueryCollection QueryParameters => this.httpRequest.Query;
 
-        /// <summary>
-        /// Gets a bool value that indicates whether the rquest has a body.
-        /// </summary>
         public bool HasEntityBody => this.ContentLength > 0;
 
-        /// <summary>
-        /// Gets the length of the body included in the request.
-        /// </summary>
         public long ContentLength => this.httpRequest.ContentLength.GetValueOrDefault();
 
-        /// <summary>
-        /// Gets a stream that contains the body included in the request.
-        /// </summary>
+        public string Path => this.httpRequest.Path;
+
         public Stream PayloadStream => this.httpRequest.Body;
 
-        /// <summary>
-        /// Deserializes the JSON request payload into the specified type. Throws
-        /// an exception if no payload is present or it cannot be deserialized.
-        /// </summary>
         public async Task<TPayload> DeserializeJsonAsync<TPayload>()
         {
             if (!this.HasEntityBody)
