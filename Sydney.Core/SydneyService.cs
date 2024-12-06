@@ -42,7 +42,6 @@
             serverOptions.ListenAnyIP(config.Port);
 
             // Create connection factory.
-            // TODO: Do we need something different than default options here?
             SocketTransportFactory socketTransportFactory =
                 new SocketTransportFactory(
                     new OptionsWrapper<SocketTransportOptions>(new SocketTransportOptions()),

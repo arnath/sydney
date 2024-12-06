@@ -13,7 +13,7 @@
         public static async Task Main()
         {
             SydneyServiceConfig config =
-                new SydneyServiceConfig(
+                SydneyServiceConfig.CreateHttp(
                     8080,
                     returnExceptionMessagesInResponse: true);
             ILoggerFactory loggerFactory =
@@ -41,7 +41,7 @@
 
             private readonly List<dynamic> posts = new();
 
-            // Override the functions for the HTTP methods you want to handle (the rest 
+            // Override the functions for the HTTP methods you want to handle (the rest
             // will return HTTP 405).
             public override Task<SydneyResponse> ListAsync(ISydneyRequest request)
             {
@@ -55,13 +55,13 @@
             public override async Task<SydneyResponse> CreateAsync(ISydneyRequest request)
             {
                 // You can deserialize a request payload by calling request.DeserializeJsonAsync<T>().
-                // This will deserialize a JSON payload into whatever type you have defined. 
+                // This will deserialize a JSON payload into whatever type you have defined.
                 dynamic post = await request.DeserializeJsonAsync<dynamic>();
                 if (post == null)
                 {
                     // Throwing an HttpResponseException (or subclass) from your handler will
                     // return the specified HttpStatusCode as a response and optionally the
-                    // message as a response payload. 
+                    // message as a response payload.
                     throw new HttpResponseException(HttpStatusCode.BadRequest, "Post is null");
                 }
 
@@ -71,7 +71,7 @@
 
                 // You can add response headers via the response.Headers dictionary in the
                 // SydneyResponse class. Content-Type, Content-Length, and the response
-                // status code are set automatically. 
+                // status code are set automatically.
                 response.Headers.Add("Cool-Custom-Header", "arandomvalue");
 
                 return response;
