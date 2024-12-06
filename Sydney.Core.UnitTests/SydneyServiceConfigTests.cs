@@ -2,6 +2,7 @@
 {
     using System;
     using System.Security.Cryptography.X509Certificates;
+    using FakeItEasy;
     using Xunit;
 
     public class SydneyServiceConfigTests
@@ -42,7 +43,7 @@
         [Fact]
         public void ValidateThrowsExceptionForPort80WithHttps()
         {
-            SydneyServiceConfig config = new SydneyServiceConfig(true, 80, new X509Certificate2());
+            SydneyServiceConfig config = new SydneyServiceConfig(true, 80, A.Fake<X509Certificate2>());
 
             ArgumentException exception = Assert.Throws<ArgumentException>(() => config.Validate());
             Assert.Equal(
@@ -53,7 +54,7 @@
         [Fact]
         public void ValidateDoesNotThrowExceptionForValidHttpsConfig()
         {
-            SydneyServiceConfig config = SydneyServiceConfig.CreateHttps(new X509Certificate2(), 123, true);
+            SydneyServiceConfig config = SydneyServiceConfig.CreateHttps(A.Fake<X509Certificate2>(), 123, true);
 
             // Call should not throw exceptions.
             config.Validate();
