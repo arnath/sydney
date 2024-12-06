@@ -69,7 +69,7 @@
             context.Response.ContentLength = jsonPayload.Length;
             foreach (KeyValuePair<string, string> header in response.Headers)
             {
-                context.Response.Headers.Add(header.Key, header.Value);
+                context.Response.Headers[header.Key] = header.Value;
             }
 
             // Lock headers and status code.

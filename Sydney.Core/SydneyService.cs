@@ -107,15 +107,8 @@
 
         public void AddRestHandler(string path, RestHandlerBase handler)
         {
-            if (path == null)
-            {
-                throw new ArgumentNullException(nameof(path));
-            }
-
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler));
-            }
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(path);
+            ArgumentNullException.ThrowIfNull(handler);
 
             if (this.runningTaskCompletionSource != null)
             {
@@ -127,15 +120,8 @@
 
         public void AddResourceHandler(string collectionPath, ResourceHandlerBase handler)
         {
-            if (collectionPath == null)
-            {
-                throw new ArgumentNullException(nameof(collectionPath));
-            }
-
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler));
-            }
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(collectionPath);
+            ArgumentNullException.ThrowIfNull(handler);
 
             if (this.runningTaskCompletionSource != null)
             {
