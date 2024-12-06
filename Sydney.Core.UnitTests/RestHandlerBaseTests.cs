@@ -6,8 +6,6 @@
     using System.Threading.Tasks;
     using FakeItEasy;
     using Microsoft.AspNetCore.Http;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Logging.Abstractions;
     using Xunit;
 
     public class RestHandlerBaseTests
@@ -20,7 +18,7 @@
         [InlineData(HttpMethod.Head, "HeadAsync")]
         [InlineData(HttpMethod.Patch, "PatchAsync")]
         [InlineData(HttpMethod.Options, "OptionsAsync")]
-        public async void HttpMethodMapsToCorrectHandlerMethodAsync(HttpMethod httpMethod, string handlerMethodName)
+        public async Task HttpMethodMapsToCorrectHandlerMethodAsync(HttpMethod httpMethod, string handlerMethodName)
         {
             // We use fakes to avoid defining dummy concrete classes.
             HttpRequest httpRequest = A.Fake<HttpRequest>();
@@ -45,7 +43,7 @@
         }
 
         [Fact]
-        public async void UnsupportedHttpMethodReturnsMethodNotAllowed()
+        public async Task UnsupportedHttpMethodReturnsMethodNotAllowed()
         {
             HttpRequest httpRequest = A.Fake<HttpRequest>();
             httpRequest.Method = "GET";
@@ -62,7 +60,7 @@
         }
 
         [Fact]
-        public async void HttpResponseExceptionFromHandlerMethodReturnsSpecifiedStatusCode()
+        public async Task HttpResponseExceptionFromHandlerMethodReturnsSpecifiedStatusCode()
         {
             HttpRequest httpRequest = A.Fake<HttpRequest>();
             httpRequest.Method = "GET";
@@ -82,7 +80,7 @@
         }
 
         [Fact]
-        public void UnexpectedExceptionFromHandlerMethodReturnsInternalServerError()
+        public async Task UnexpectedExceptionFromHandlerMethodReturnsInternalServerError()
         {
             HttpRequest httpRequest = A.Fake<HttpRequest>();
             httpRequest.Method = "GET";
@@ -94,15 +92,15 @@
                 .Throws(new InvalidOperationException());
 
             SydneyResponse response =
-                handler.HandleRequestAsync(
+                await handler.HandleRequestAsync(
                     request,
-                    false).Result;
+                    false);
 
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
         }
 
         [Fact]
-        public void ExceptionMessageIsReturnedInPayloadWhenReturnExceptionMessagesInResponseIsTrue()
+        public async Task ExceptionMessageIsReturnedInPayloadWhenReturnExceptionMessagesInResponseIsTrue()
         {
             string expectedExceptionMessage = "Here's an exception!";
 
@@ -116,9 +114,9 @@
                 .Throws(new InvalidOperationException(expectedExceptionMessage));
 
             SydneyResponse response =
-                handler.HandleRequestAsync(
+                await handler.HandleRequestAsync(
                     request,
-                    true).Result;
+                    true);
 
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
             Assert.Equal(expectedExceptionMessage, response.Payload);

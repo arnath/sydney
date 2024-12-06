@@ -31,7 +31,7 @@
         }
 
         [Fact]
-        public async void ProcessRequestAsyncReturns404WhenNoMatchingRouteIsFound()
+        public async Task ProcessRequestAsyncReturns404WhenNoMatchingRouteIsFound()
         {
             DefaultHttpContext context = new DefaultHttpContext();
             Router router = new Router();
@@ -48,7 +48,7 @@
         }
 
         [Fact]
-        public async void ProcessRequestAsyncReturnsValuesFromResponseOnSuccess()
+        public async Task ProcessRequestAsyncReturnsValuesFromResponseOnSuccess()
         {
             DefaultHttpContext context = new DefaultHttpContext();
             context.Request.Method = "GET";
@@ -83,7 +83,7 @@
         }
 
         [Fact]
-        public async void ProcessRequestAsyncSerializesPayloadAsJson()
+        public async Task ProcessRequestAsyncSerializesPayloadAsJson()
         {
             DefaultHttpContext context = new DefaultHttpContext();
             context.Request.Method = "GET";

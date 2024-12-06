@@ -1,6 +1,7 @@
 ﻿namespace Sydney.Core.UnitTests
 {
     using System;
+    using System.Threading.Tasks;
     using FakeItEasy;
     using Microsoft.Extensions.Logging.Abstractions;
     using Xunit;
@@ -38,13 +39,13 @@
         }
 
         [Fact]
-        public async void StartAsyncThrowsInvalidOperationExceptionWhenServiceIsAlreadyRunning()
+        public async Task StartAsyncThrowsInvalidOperationExceptionWhenServiceIsAlreadyRunning()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
 
             // Don't await start because it never returns.
-            service.StartAsync();
+            _ = service.StartAsync();
             Exception exception = await Record.ExceptionAsync(service.StartAsync);
             await service.StopAsync();
 
@@ -55,7 +56,7 @@
         }
 
         [Fact]
-        public async void StopAsyncThrowsInvalidOperationExceptionWhenServiceIsNotRunning()
+        public async Task StopAsyncThrowsInvalidOperationExceptionWhenServiceIsNotRunning()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
@@ -94,14 +95,14 @@
         }
 
         [Fact]
-        public async void AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
+        public async Task AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
         {
             SydneyServiceConfig config = new SydneyServiceConfig(80);
             RestHandlerBase handler = A.Fake<RestHandlerBase>();
             SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
 
             // Don't await start because it never returns.
-            service.StartAsync();
+            _ = service.StartAsync();
             Exception exception = Record.Exception(() => service.AddRestHandler("/foo/bar", handler));
             await service.StopAsync();
 
