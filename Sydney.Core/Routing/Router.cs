@@ -40,9 +40,9 @@
             for (int i = 0; i < segments.Length; i++)
             {
                 string segment = segments[i];
-                if (segment == null || segment.Length == 0)
+                if (string.IsNullOrWhiteSpace(segment))
                 {
-                    throw new ArgumentException("Route segments must be at least one character long.", nameof(route));
+                    throw new InvalidOperationException("Route segments must be at least one non-whitespace character long.");
                 }
 
                 RouteNode child;
@@ -52,7 +52,7 @@
                     // and add a parameter node to the tree.
                     if (parameterNames.Contains(parameterName))
                     {
-                        throw new ArgumentException("Routes cannot use the same parameter name twice.", nameof(route));
+                        throw new InvalidOperationException($"The parameter name {parameterName} is used twice in this route. Parameters must be unique.");
                     }
 
                     parameterNames.Add(parameterName);
@@ -139,7 +139,9 @@
             return null;
         }
 
-        private static bool TryGetParameterName(string segment, [NotNullWhen(returnValue: true)] out string? parameterName)
+        private static bool TryGetParameterName(
+            string segment,
+            [NotNullWhen(returnValue: true)] out string? parameterName)
         {
             if (segment[0] == '{' && segment[segment.Length - 1] == '}')
             {

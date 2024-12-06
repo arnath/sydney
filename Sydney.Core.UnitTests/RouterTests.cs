@@ -23,22 +23,33 @@
         [Fact]
         public void AddRouteSegmentsMustBeAtLeastOneCharacter()
         {
-            ArgumentException exception =
-                Assert.Throws<ArgumentException>(
+            InvalidOperationException exception =
+                Assert.Throws<InvalidOperationException>(
                     () => this.router.AddRoute("/users//profile", this.handler));
             Assert.Equal(
-                "Route segments must be at least one character long. (Parameter 'route')",
+                "Route segments must be at least one non-whitespace character long.",
+                exception.Message);
+        }
+
+        [Fact]
+        public void AddRouteSegmentsMustBeNonWhitespace()
+        {
+            InvalidOperationException exception =
+                Assert.Throws<InvalidOperationException>(
+                    () => this.router.AddRoute("/users/      /profile", this.handler));
+            Assert.Equal(
+                "Route segments must be at least one non-whitespace character long.",
                 exception.Message);
         }
 
         [Fact]
         public void AddRouteCannotUseSameParameterTwice()
         {
-            ArgumentException exception =
-                Assert.Throws<ArgumentException>(
+            InvalidOperationException exception =
+                Assert.Throws<InvalidOperationException>(
                     () => this.router.AddRoute("/users/{id}/messages/{id}", this.handler));
             Assert.Equal(
-                "Routes cannot use the same parameter name twice. (Parameter 'route')",
+                "The parameter name id is used twice in this route. Parameters must be unique.",
                 exception.Message);
         }
 

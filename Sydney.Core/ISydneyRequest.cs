@@ -1,4 +1,4 @@
-namespace Sydney.Core
+﻿namespace Sydney.Core
 {
     using System.Collections.Generic;
     using System.IO;
