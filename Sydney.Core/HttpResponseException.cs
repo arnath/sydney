@@ -3,6 +3,10 @@
     using System;
     using System.Net;
 
+    /// <summary>
+    /// Exception type that results in the specified HTTP status code and
+    /// (optionally) error message being returned to the client as a response.
+    /// </summary>
     public class HttpResponseException : Exception
     {
         public HttpResponseException()
@@ -36,6 +40,9 @@
             this.StatusCode = statusCode;
         }
 
+        /// <summary>
+        /// The HTTP status code that will be returnd to the client.
+        /// </summary>
         public HttpStatusCode StatusCode { get; }
     }
 }

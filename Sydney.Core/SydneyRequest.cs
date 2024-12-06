@@ -12,7 +12,7 @@
     {
         private readonly HttpRequest httpRequest;
 
-        private readonly Dictionary<Type, object> deserializedPayloads = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object?> deserializedPayloads = new Dictionary<Type, object?>();
 
         internal SydneyRequest(HttpRequest httpRequest, IDictionary<string, string> pathParameters)
         {
@@ -49,7 +49,7 @@
 
         public Stream PayloadStream => this.httpRequest.Body;
 
-        public async Task<TPayload> DeserializeJsonAsync<TPayload>()
+        public async Task<TPayload?> DeserializeJsonAsync<TPayload>()
         {
             if (!this.HasEntityBody)
             {
@@ -59,9 +59,9 @@
             try
             {
                 Type payloadType = typeof(TPayload);
-                if (deserializedPayloads.TryGetValue(payloadType, out object value))
+                if (this.deserializedPayloads.TryGetValue(payloadType, out object? value))
                 {
-                    return (TPayload)value;
+                    return (TPayload?)value;
                 }
 
                 if (this.PayloadStream.CanSeek)
@@ -69,11 +69,11 @@
                     this.PayloadStream.Seek(0, SeekOrigin.Begin);
                 }
 
-                TPayload payload = await JsonSerializer.DeserializeAsync<TPayload>(
+                TPayload? payload = await JsonSerializer.DeserializeAsync<TPayload>(
                     this.PayloadStream,
                     SydneyService.DefaultJsonSerializerOptions);
 
-                deserializedPayloads[payloadType] = payload;
+                this.deserializedPayloads[payloadType] = payload;
 
                 return payload;
             }

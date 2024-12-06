@@ -56,6 +56,6 @@ namespace Sydney.Core
         /// Deserializes the JSON request payload into the specified type. Throws
         /// an exception if no payload is present or it cannot be deserialized.
         /// </summary>
-        Task<TPayload> DeserializeJsonAsync<TPayload>();
+        Task<TPayload?> DeserializeJsonAsync<TPayload>();
     }
 }
