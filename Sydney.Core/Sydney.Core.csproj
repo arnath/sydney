@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AnalysisLevel>latest-Recommended</AnalysisLevel>
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>1.1.5</Version>
     <Authors>Vijay Prakash</Authors>
     <Company />
-    <Product>Sydney HTTP Framework</Product>
+    <Product>Sydney REST Framework</Product>
     <RepositoryUrl>https://github.com/arnath/sydney</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Description>Sydney HTTP Framework</Description>
+    <Description>Sydney REST Framework</Description>
     <OutputType>Library</OutputType>
     <Nullable>enable</Nullable>
   </PropertyGroup>
