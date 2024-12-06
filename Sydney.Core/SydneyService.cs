@@ -4,7 +4,7 @@
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
-
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Server.Kestrel.Core;
     using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
     using Microsoft.Extensions.Logging;
@@ -39,7 +39,15 @@
 
             // Listen on any IP on the configured port.
             KestrelServerOptions serverOptions = new KestrelServerOptions();
-            serverOptions.ListenAnyIP(config.Port);
+            serverOptions.ListenAnyIP(
+                config.Port,
+                (listenOptions) =>
+                    {
+                        if (config.UseHttps)
+                        {
+                            listenOptions.UseHttps(config.HttpsServerCertificate!);
+                        }
+                    });
 
             // Create connection factory.
             SocketTransportFactory socketTransportFactory =
