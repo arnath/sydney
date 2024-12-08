@@ -1,11 +1,9 @@
 ﻿namespace Sydney.Core.UnitTests;
 
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using FakeItEasy;
-using Microsoft.AspNetCore.Http;
 using Xunit;
 
 public class RestHandlerBaseTests
@@ -21,9 +19,8 @@ public class RestHandlerBaseTests
     public async Task HttpMethodMapsToCorrectHandlerMethodAsync(HttpMethod httpMethod, string handlerMethodName)
     {
         // We use fakes to avoid defining dummy concrete classes.
-        HttpRequest httpRequest = A.Fake<HttpRequest>();
-        httpRequest.Method = httpMethod.ToString();
-        SydneyRequest request = new SydneyRequest(httpRequest, new Dictionary<string, string>());
+        ISydneyRequest request = A.Fake<ISydneyRequest>();
+        A.CallTo(() => request.HttpMethod).Returns(httpMethod);
 
         RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler)
@@ -42,9 +39,8 @@ public class RestHandlerBaseTests
     [Fact]
     public async Task UnsupportedHttpMethodThrowsNotImplementedException()
     {
-        HttpRequest httpRequest = A.Fake<HttpRequest>();
-        httpRequest.Method = "GET";
-        SydneyRequest request = new SydneyRequest(httpRequest, new Dictionary<string, string>());
+        ISydneyRequest request = A.Fake<ISydneyRequest>();
+        A.CallTo(() => request.HttpMethod).Returns(HttpMethod.Get);
 
         RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
 

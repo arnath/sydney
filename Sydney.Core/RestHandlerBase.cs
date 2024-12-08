@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 public abstract class RestHandlerBase
 {
-    internal virtual Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
+    internal virtual Task<SydneyResponse> HandleRequestAsync(ISydneyRequest request)
     {
         switch (request.HttpMethod)
         {

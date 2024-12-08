@@ -86,7 +86,7 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
         await context.Response.CompleteAsync();
     }
 
-    private async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, RestHandlerBase handler)
+    private async Task<SydneyResponse> HandleRequestAsync(ISydneyRequest request, RestHandlerBase handler)
     {
         this.logger.LogInformation(
             "Request Received: path={Path}, method={Method}.",

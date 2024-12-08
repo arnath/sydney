@@ -16,9 +16,9 @@ Sydney is available under the `Sydney.Core` NuGet package on nuget.org. You can 
 
 ### Resource Handler
 
-Sydney supports the concept of resource-based APIs as laid out in Google's [API Design Guide](https://cloud.google.com/apis/design). When using this, you define a handler class that inherits from `ResourceHandlerBase`. It supports the five standard operations via abstract methods: `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, and `DeleteAsync`. Override the ones you want to handle and any unimplemented handlers will return an HTTP 405. 
+Sydney supports the concept of resource-based APIs as laid out in Google's [API Design Guide](https://cloud.google.com/apis/design). When using this, you define a handler class that inherits from `ResourceHandlerBase`. It supports the five standard operations via abstract methods: `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, and `DeleteAsync`. Override the ones you want to handle and any unimplemented handlers will return an HTTP 405.
 
-> **NOTE**: When you register a resource handler, it adds routes for both the collection URL and the individual resource URL. E.g., if you register a resource handler for `/books`, this will add routes for both `/books` and `/books/{id}`. 
+> **NOTE**: When you register a resource handler, it adds routes for both the collection URL and the individual resource URL. E.g., if you register a resource handler for `/books`, this will add routes for both `/books` and `/books/{id}`.
 
 Sydney follows the "let it crash" philosophy so the suggested error handling model for your handlers is just to not catch any exceptions. Uncaught exceptions from anything you call from your handler will return an HTTP 500. If you wish to change the status code, catch the exception and rethrow an `HttpResponseException` with the status code you want. This allows you to write code for the success case without a bunch of try/catch or error handling blocks.
 
@@ -31,9 +31,9 @@ private class PostsHandler : ResourceHandlerBase
 
     private readonly List<dynamic> posts = new();
 
-    // Override the functions for the HTTP methods you want to handle (the rest 
+    // Override the functions for the HTTP methods you want to handle (the rest
     // will return HTTP 405).
-    protected override Task<SydneyResponse> ListAsync(SydneyRequest request)
+    protected override Task<SydneyResponse> ListAsync(ISydneyRequest request)
     {
         // Handlers must either return a SydneyResponse or throw an exception.
         // A SydneyResponse contains an HttpStatusCode and an optional payload
@@ -42,16 +42,16 @@ private class PostsHandler : ResourceHandlerBase
         return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, posts));
     }
 
-    protected override async Task<SydneyResponse> CreateAsync(SydneyRequest request)
+    protected override async Task<SydneyResponse> CreateAsync(ISydneyRequest request)
     {
         // You can deserialize a request payload by calling request.DeserializeJsonAsync<T>().
-        // This will deserialize a JSON payload into whatever type you have defined. 
+        // This will deserialize a JSON payload into whatever type you have defined.
         dynamic post = await request.DeserializeJsonAsync<dynamic>();
         if (post == null)
         {
             // Throwing an HttpResponseException (or subclass) from your handler will
             // return the specified HttpStatusCode as a response and optionally the
-            // message as a response payload. 
+            // message as a response payload.
             throw new HttpResponseException(HttpStatusCode.BadRequest, "Post is null");
         }
 
@@ -61,13 +61,13 @@ private class PostsHandler : ResourceHandlerBase
 
         // You can add response headers via the response.Headers dictionary in the
         // SydneyResponse class. Content-Type, Content-Length, and the response
-        // status code are set automatically. 
+        // status code are set automatically.
         response.Headers.Add("Cool-Custom-Header", "arandomvalue");
 
         return response;
     }
 
-    protected override Task<SydneyResponse> GetAsync(SydneyRequest request)
+    protected override Task<SydneyResponse> GetAsync(ISydneyRequest request)
     {
         // Throwing any other uncaught exception from your handler will
         // return HTTP 500 and optionally the message as a response payload.
@@ -80,7 +80,7 @@ private class PostsHandler : ResourceHandlerBase
 
 The legacy REST handler mechanism works the same as above with two differences:
 - Your handler class must inherit from `RestHandlerBase`.
-- The `RestHandlerBase` class contains abstract methods for all the HTTP methods instead of the standard operations: `GetAsync`, `PostAsync`, `DeleteAsync`, `PutAsync`, `HeadAsync`, `PatchAsync`, and `OptionsAsync`. 
+- The `RestHandlerBase` class contains abstract methods for all the HTTP methods instead of the standard operations: `GetAsync`, `PostAsync`, `DeleteAsync`, `PutAsync`, `HeadAsync`, `PatchAsync`, and `OptionsAsync`.
 
 It's recommended that you use the resource handlers instead of this because it forces you to use better semantics when creating your API. Also, if you use a rest handler, the collection URL and individual item URL need to be registered as separate handlers.
 
@@ -95,7 +95,7 @@ private class BooksHandler : RestHandlerBase
     private readonly List<dynamic> books = new();
 
     // Handles GET requests.
-    protected override Task<SydneyResponse> GetAsync(SydneyRequest request)
+    protected override Task<SydneyResponse> GetAsync(ISydneyRequest request)
     {
         // You can retrieve path parameters using the request.PathParameters
         // dictionary. They are parsed as strings so you will need to convert
@@ -106,7 +106,7 @@ private class BooksHandler : RestHandlerBase
     }
 
     // Handles OPTIONS requests.
-    protected override Task<SydneyResponse> OptionsAsync(SydneyRequest request)
+    protected override Task<SydneyResponse> OptionsAsync(ISydneyRequest request)
     {
         return Task.FromResult(new SydneyResponse(HttpStatusCode.Accepted));
     }
@@ -115,7 +115,7 @@ private class BooksHandler : RestHandlerBase
 
 ### Service
 
-Create a `SydneyServiceConfig` that takes the port and a boolean indicating whether to return exception messages in response payloads for errors. Then, create the `SydneyService` object using the config object and an optional logger factory that implements the `ILoggerFactory` interface from the `Microsoft.Extensions.Logging.Abstractions` NuGet package. This will create a service that listens on `0.0.0.0:port`. 
+Create a `SydneyServiceConfig` that takes the port and a boolean indicating whether to return exception messages in response payloads for errors. Then, create the `SydneyService` object using the config object and an optional logger factory that implements the `ILoggerFactory` interface from the `Microsoft.Extensions.Logging.Abstractions` NuGet package. This will create a service that listens on `0.0.0.0:port`.
 
 Register handlers with the service using the `AddRestHandler` and `AddResourceHandler` methods that take the path and an instance of
 the handler class you created. Handler paths can have path parameters by including segments of the form `{param}`, where `param` is the

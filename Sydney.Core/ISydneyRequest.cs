@@ -53,6 +53,11 @@ public interface ISydneyRequest
     Stream PayloadStream { get; }
 
     /// <summary>
+    /// Gets the request path.
+    /// </summary>
+    string Path { get; }
+
+    /// <summary>
     /// Deserializes the JSON request payload into the specified type. Throws
     /// an exception if no payload is present or it cannot be deserialized.
     /// </summary>
