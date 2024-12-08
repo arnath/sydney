@@ -230,4 +230,123 @@ public class SydneyHttpApplicationTests
             Assert.Equal(jsonPayload, reader.ReadToEnd());
         }
     }
+
+    [Fact]
+    public async Task ProcessRequestAsyncReturnsInternalServerErrorWhenPreHandlerHookThrowsException()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = "GET";
+        context.Request.Path = new PathString("/foo/bar");
+
+        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+
+        SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
+        A.CallTo(() => middleware.PreHandlerHookAsync(A<SydneyRequest>.Ignored)).Throws(new Exception());
+
+        Router router = new Router();
+        router.AddRoute("/foo/bar", handler);
+
+        SydneyHttpApplication httpApplication =
+            new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
+                router,
+                new List<SydneyMiddleware>() { middleware },
+                false);
+
+        await httpApplication.ProcessRequestAsync(context);
+
+        Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsyncReturnsInternalServerErrorWhenPostHandlerHookThrowsException()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = "GET";
+        context.Request.Path = new PathString("/foo/bar");
+
+        SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
+        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored)).Returns(Task.FromResult(originalResponse));
+
+        SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
+        A.CallTo(() => middleware.PostHandlerHookAsync(A<SydneyRequest>.Ignored, A<SydneyResponse>.Ignored))
+            .Throws(new Exception());
+
+        Router router = new Router();
+        router.AddRoute("/foo/bar", handler);
+
+        SydneyHttpApplication httpApplication =
+            new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
+                router,
+                new List<SydneyMiddleware>() { middleware },
+                false);
+
+        await httpApplication.ProcessRequestAsync(context);
+
+        Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsyncReturnsModifiedResponseWhenPostHandlerHookModifiesResponse()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = "GET";
+        context.Request.Path = new PathString("/foo/bar");
+
+        SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
+        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored)).Returns(Task.FromResult(originalResponse));
+
+        SydneyResponse modifiedResponse = new SydneyResponse(HttpStatusCode.ExpectationFailed);
+        SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
+        A.CallTo(() => middleware.PostHandlerHookAsync(A<SydneyRequest>.Ignored, A<SydneyResponse>.Ignored))
+            .Returns(Task.FromResult(modifiedResponse));
+
+        Router router = new Router();
+        router.AddRoute("/foo/bar", handler);
+
+        SydneyHttpApplication httpApplication =
+            new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
+                router,
+                new List<SydneyMiddleware>() { middleware },
+                false);
+
+        await httpApplication.ProcessRequestAsync(context);
+
+        Assert.Equal((int)HttpStatusCode.ExpectationFailed, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsyncReturnsOriginalResponseWhenPostHandlerHookDoesNotModifyResponse()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = "GET";
+        context.Request.Path = new PathString("/foo/bar");
+
+        SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
+        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored)).Returns(Task.FromResult(originalResponse));
+
+        SydneyResponse modifiedResponse = new SydneyResponse(HttpStatusCode.ExpectationFailed);
+        SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
+        A.CallTo(() => middleware.PostHandlerHookAsync(A<SydneyRequest>.Ignored, A<SydneyResponse>.Ignored))
+            .Returns(Task.FromResult<SydneyResponse>(null));
+
+        Router router = new Router();
+        router.AddRoute("/foo/bar", handler);
+
+        SydneyHttpApplication httpApplication =
+            new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
+                router,
+                new List<SydneyMiddleware>() { middleware },
+                false);
+
+        await httpApplication.ProcessRequestAsync(context);
+
+        Assert.Equal((int)HttpStatusCode.AlreadyReported, context.Response.StatusCode);
+    }
 }
