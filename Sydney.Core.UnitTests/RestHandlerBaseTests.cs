@@ -31,10 +31,7 @@ public class RestHandlerBaseTests
             .WithReturnType<Task<SydneyResponse>>()
             .Returns(Task.FromResult(new SydneyResponse(HttpStatusCode.Ambiguous)));
 
-        SydneyResponse response =
-            await handler.HandleRequestAsync(
-                request,
-                false);
+        SydneyResponse response = await handler.HandleRequestAsync(request);
 
         Assert.Equal(HttpStatusCode.Ambiguous, response.StatusCode);
         A.CallTo(handler)
@@ -43,7 +40,7 @@ public class RestHandlerBaseTests
     }
 
     [Fact]
-    public async Task UnsupportedHttpMethodReturnsMethodNotAllowed()
+    public async Task UnsupportedHttpMethodThrowsNotImplementedException()
     {
         HttpRequest httpRequest = A.Fake<HttpRequest>();
         httpRequest.Method = "GET";
@@ -51,74 +48,7 @@ public class RestHandlerBaseTests
 
         RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
 
-        SydneyResponse response =
-            await handler.HandleRequestAsync(
-                request,
-                false);
-
-        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task HttpResponseExceptionFromHandlerMethodReturnsSpecifiedStatusCode()
-    {
-        HttpRequest httpRequest = A.Fake<HttpRequest>();
-        httpRequest.Method = "GET";
-        SydneyRequest request = new SydneyRequest(httpRequest, new Dictionary<string, string>());
-
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
-        A.CallTo(handler)
-            .Where(call => call.Method.Name == "GetAsync")
-            .Throws(new HttpResponseException(HttpStatusCode.EarlyHints));
-
-        SydneyResponse response =
-            await handler.HandleRequestAsync(
-                request,
-                false);
-
-        Assert.Equal(HttpStatusCode.EarlyHints, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task UnexpectedExceptionFromHandlerMethodReturnsInternalServerError()
-    {
-        HttpRequest httpRequest = A.Fake<HttpRequest>();
-        httpRequest.Method = "GET";
-        SydneyRequest request = new SydneyRequest(httpRequest, new Dictionary<string, string>());
-
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
-        A.CallTo(handler)
-            .Where(call => call.Method.Name == "GetAsync")
-            .Throws(new InvalidOperationException());
-
-        SydneyResponse response =
-            await handler.HandleRequestAsync(
-                request,
-                false);
-
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task ExceptionMessageIsReturnedInPayloadWhenReturnExceptionMessagesInResponseIsTrue()
-    {
-        string expectedExceptionMessage = "Here's an exception!";
-
-        HttpRequest httpRequest = A.Fake<HttpRequest>();
-        httpRequest.Method = "GET";
-        SydneyRequest request = new SydneyRequest(httpRequest, new Dictionary<string, string>());
-
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
-        A.CallTo(handler)
-            .Where(call => call.Method.Name == "GetAsync")
-            .Throws(new InvalidOperationException(expectedExceptionMessage));
-
-        SydneyResponse response =
-            await handler.HandleRequestAsync(
-                request,
-                true);
-
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-        Assert.Equal(expectedExceptionMessage, response.Payload);
+        _ = await Assert.ThrowsAsync<NotImplementedException>(
+            () => handler.HandleRequestAsync(request));
     }
 }

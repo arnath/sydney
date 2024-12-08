@@ -1,5 +1,6 @@
 ﻿namespace Sydney.Core.UnitTests;
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -19,9 +20,10 @@ public class SydneyHttpApplicationTests
     {
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
                 A.Fake<Router>(),
-                false,
-                NullLoggerFactory.Instance);
+                new List<SydneyMiddleware>(),
+                false);
 
         IFeatureCollection contextFeatures = A.Fake<IFeatureCollection>();
         HttpContext context = httpApplication.CreateContext(contextFeatures);
@@ -38,9 +40,10 @@ public class SydneyHttpApplicationTests
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
                 router,
-                false,
-                NullLoggerFactory.Instance);
+                new List<SydneyMiddleware>(),
+                false);
 
         await httpApplication.ProcessRequestAsync(context);
 
@@ -48,7 +51,7 @@ public class SydneyHttpApplicationTests
     }
 
     [Fact]
-    public async Task ProcessRequestAsyncReturnsValuesFromResponseOnSuccess()
+    public async Task ProcessRequestAsyncReturnsValuesFromHandlerOnSuccess()
     {
         DefaultHttpContext context = new DefaultHttpContext();
         context.Request.Method = "GET";
@@ -57,7 +60,7 @@ public class SydneyHttpApplicationTests
         SydneyResponse response = new SydneyResponse(HttpStatusCode.AlreadyReported);
         response.Headers.Add(new KeyValuePair<string, string>("foo", "bar"));
         RestHandlerBase handler = A.Fake<RestHandlerBase>();
-        A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored, false))
+        A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(response));
 
         Router router = new Router();
@@ -65,9 +68,10 @@ public class SydneyHttpApplicationTests
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
                 router,
-                false,
-                NullLoggerFactory.Instance);
+                new List<SydneyMiddleware>(),
+                false);
 
         await httpApplication.ProcessRequestAsync(context);
 
@@ -83,6 +87,114 @@ public class SydneyHttpApplicationTests
     }
 
     [Fact]
+    public async Task ProcessRequestAsyncReturnsMethodNotAllowedWhenHandlerThrowsNotImplementedException()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = "GET";
+        context.Request.Path = new PathString("/foo/bar");
+
+        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+
+        Router router = new Router();
+        router.AddRoute("/foo/bar", handler);
+
+        SydneyHttpApplication httpApplication =
+            new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
+                router,
+                new List<SydneyMiddleware>(),
+                false);
+
+        await httpApplication.ProcessRequestAsync(context);
+
+        Assert.Equal((int)HttpStatusCode.MethodNotAllowed, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsyncReturnsInternalServerErrorWhenHandlerThrowsUnexpectedException()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = "GET";
+        context.Request.Path = new PathString("/foo/bar");
+
+        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        A.CallTo(handler).Where(call => call.Method.Name == "GetAsync").Throws(new Exception());
+
+        Router router = new Router();
+        router.AddRoute("/foo/bar", handler);
+
+        SydneyHttpApplication httpApplication =
+            new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
+                router,
+                new List<SydneyMiddleware>(),
+                false);
+
+        await httpApplication.ProcessRequestAsync(context);
+
+        Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsyncReturnsSpecifiedStatusCodeWhenHandlerThrowsHttpResponseException()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = "GET";
+        context.Request.Path = new PathString("/foo/bar");
+
+        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        A.CallTo(handler).Where(call => call.Method.Name == "GetAsync").Throws(new HttpResponseException(HttpStatusCode.EarlyHints));
+
+        Router router = new Router();
+        router.AddRoute("/foo/bar", handler);
+
+        SydneyHttpApplication httpApplication =
+            new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
+                router,
+                new List<SydneyMiddleware>(),
+                false);
+
+        await httpApplication.ProcessRequestAsync(context);
+
+        Assert.Equal((int)HttpStatusCode.EarlyHints, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsyncReturnsExceptionMessageWhenSpecifiedInConfig()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = "GET";
+        context.Request.Path = new PathString("/foo/bar");
+        context.Response.Body = new MemoryStream();
+
+        string message = "here is a message";
+        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        A.CallTo(handler).Where(call => call.Method.Name == "GetAsync").Throws(new Exception(message));
+
+        Router router = new Router();
+        router.AddRoute("/foo/bar", handler);
+
+        SydneyHttpApplication httpApplication =
+            new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
+                router,
+                new List<SydneyMiddleware>(),
+                true);
+
+        await httpApplication.ProcessRequestAsync(context);
+
+        Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
+        string jsonPayload = JsonSerializer.Serialize(message, SydneyService.DefaultJsonSerializerOptions);
+        Assert.Equal(jsonPayload.Length, context.Response.ContentLength);
+        context.Response.Body.Seek(0, SeekOrigin.Begin);
+        using (StreamReader reader = new StreamReader(context.Response.Body))
+        {
+            Assert.Equal(jsonPayload, reader.ReadToEnd());
+        }
+    }
+
+    [Fact]
     public async Task ProcessRequestAsyncSerializesPayloadAsJson()
     {
         DefaultHttpContext context = new DefaultHttpContext();
@@ -94,7 +206,7 @@ public class SydneyHttpApplicationTests
         SydneyResponse response = new SydneyResponse(HttpStatusCode.AlreadyReported, payload);
         response.Headers.Add(new KeyValuePair<string, string>("foo", "bar"));
         RestHandlerBase handler = A.Fake<RestHandlerBase>();
-        A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored, false))
+        A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(response));
 
         Router router = new Router();
@@ -102,12 +214,14 @@ public class SydneyHttpApplicationTests
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
+                NullLoggerFactory.Instance,
                 router,
-                false,
-                NullLoggerFactory.Instance);
+                new List<SydneyMiddleware>(),
+                false);
 
         await httpApplication.ProcessRequestAsync(context);
 
+        Assert.Equal((int)HttpStatusCode.AlreadyReported, context.Response.StatusCode);
         string jsonPayload = JsonSerializer.Serialize(payload, SydneyService.DefaultJsonSerializerOptions);
         Assert.Equal(jsonPayload.Length, context.Response.ContentLength);
         context.Response.Body.Seek(0, SeekOrigin.Begin);

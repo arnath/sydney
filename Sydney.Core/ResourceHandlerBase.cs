@@ -2,14 +2,13 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 public abstract class ResourceHandlerBase
 {
-    public ResourceHandlerBase(ILoggerFactory loggerFactory)
+    public ResourceHandlerBase()
     {
-        this.CollectionHandler = new CollectionHandlerImpl(loggerFactory, this);
-        this.ResourceHandler = new ResourceHandlerImpl(loggerFactory, this);
+        this.CollectionHandler = new CollectionHandlerImpl(this);
+        this.ResourceHandler = new ResourceHandlerImpl(this);
     }
 
     internal RestHandlerBase CollectionHandler { get; }
@@ -30,7 +29,7 @@ public abstract class ResourceHandlerBase
     {
         private readonly ResourceHandlerBase parent;
 
-        public ResourceHandlerImpl(ILoggerFactory loggerFactory, ResourceHandlerBase parent) : base(loggerFactory)
+        public ResourceHandlerImpl(ResourceHandlerBase parent)
         {
             this.parent = parent;
         }
@@ -52,7 +51,7 @@ public abstract class ResourceHandlerBase
     {
         private readonly ResourceHandlerBase parent;
 
-        public CollectionHandlerImpl(ILoggerFactory loggerFactory, ResourceHandlerBase parent) : base(loggerFactory)
+        public CollectionHandlerImpl(ResourceHandlerBase parent)
         {
             this.parent = parent;
         }
