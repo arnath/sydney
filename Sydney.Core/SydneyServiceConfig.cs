@@ -1,6 +1,7 @@
 ﻿namespace Sydney.Core;
 
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 
 /// <summary>
@@ -15,16 +16,19 @@ public class SydneyServiceConfig
     /// <param name="port">Port for the server.</param>
     /// <param name="httpsServerCertificate">HTTPs server certificate. Required if useHttps is true.</param>
     /// <param name="returnExceptionMessagesInResponse">Indicates whether to return exception messages in error responses.</param>
+    /// <param name="middlewares">Optional list of middlewares that can implement pre and post handler hooks.</param>
     public SydneyServiceConfig(
         bool useHttps,
         ushort port,
         X509Certificate2? httpsServerCertificate = null,
-        bool returnExceptionMessagesInResponse = false)
+        bool returnExceptionMessagesInResponse = false,
+        params SydneyMiddleware[] middlewares)
     {
         this.UseHttps = useHttps;
         this.HttpsServerCertificate = httpsServerCertificate;
         this.Port = port;
         this.ReturnExceptionMessagesInResponse = returnExceptionMessagesInResponse;
+        this.Middlewares = new List<SydneyMiddleware>(middlewares);
     }
 
     /// <summary>
@@ -33,9 +37,10 @@ public class SydneyServiceConfig
     public static SydneyServiceConfig CreateHttps(
         X509Certificate2 httpsServerCertificate,
         ushort port = 443,
-        bool returnExceptionMessagesInResponse = false)
+        bool returnExceptionMessagesInResponse = false,
+        params SydneyMiddleware[] middlewares)
     {
-        return new SydneyServiceConfig(true, port, httpsServerCertificate, returnExceptionMessagesInResponse);
+        return new SydneyServiceConfig(true, port, httpsServerCertificate, returnExceptionMessagesInResponse, middlewares);
     }
 
     /// <summary>
@@ -43,9 +48,10 @@ public class SydneyServiceConfig
     /// </summary>
     public static SydneyServiceConfig CreateHttp(
         ushort port = 80,
-        bool returnExceptionMessagesInResponse = false)
+        bool returnExceptionMessagesInResponse = false,
+        params SydneyMiddleware[] middlewares)
     {
-        return new SydneyServiceConfig(false, port, returnExceptionMessagesInResponse: returnExceptionMessagesInResponse);
+        return new SydneyServiceConfig(false, port, null, returnExceptionMessagesInResponse, middlewares);
     }
 
     /// <summary>
@@ -67,6 +73,11 @@ public class SydneyServiceConfig
     /// Indicates whether to return exception messages in error responses.
     /// </summary>
     public bool ReturnExceptionMessagesInResponse { get; set; }
+
+    /// <summary>
+    /// Optional list of middlewares that can implement pre and post handler hooks.
+    /// </summary>
+    public IList<SydneyMiddleware> Middlewares { get; }
 
     /// <summary>
     /// Performs some internal validation on service config.

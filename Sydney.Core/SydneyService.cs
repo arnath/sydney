@@ -73,7 +73,10 @@ public class SydneyService : IDisposable
 
         this.runningTaskCompletionSource = new TaskCompletionSource();
 
-        this.logger.LogInformation("Listening on http://0.0.0.0:{Port}, press Ctrl-C to stop ...", config.Port);
+        this.logger.LogInformation(
+            "Listening on {Scheme}://0.0.0.0:{Port}, press Ctrl-C to stop ...",
+            config.UseHttps ? "https" : "http",
+            config.Port);
         foreach (string route in this.router.Routes)
         {
             this.logger.LogInformation("Registered route: /{Route}/", route);
@@ -85,9 +88,10 @@ public class SydneyService : IDisposable
         // Start the service.
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
+                this.loggerFactory,
                 this.router,
-                this.config.ReturnExceptionMessagesInResponse,
-                this.loggerFactory);
+                this.config.Middlewares,
+                this.config.ReturnExceptionMessagesInResponse);
         await this.server.StartAsync(httpApplication, CancellationToken.None);
 
         // Await a TaskCompletionSource to make this function not return until the service is stopped.
