@@ -1,68 +1,67 @@
-﻿namespace Sydney.Core
+﻿namespace Sydney.Core;
+
+using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+
+public abstract class ResourceHandlerBase
 {
-    using System;
-    using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
-
-    public abstract class ResourceHandlerBase
+    public ResourceHandlerBase(ILoggerFactory loggerFactory)
     {
-        public ResourceHandlerBase(ILoggerFactory loggerFactory)
+        this.CollectionHandler = new CollectionHandlerImpl(loggerFactory, this);
+        this.ResourceHandler = new ResourceHandlerImpl(loggerFactory, this);
+    }
+
+    internal RestHandlerBase CollectionHandler { get; }
+
+    internal RestHandlerBase ResourceHandler { get; }
+
+    public virtual Task<SydneyResponse> ListAsync(ISydneyRequest request) => throw new NotImplementedException();
+
+    public virtual Task<SydneyResponse> GetAsync(ISydneyRequest request) => throw new NotImplementedException();
+
+    public virtual Task<SydneyResponse> CreateAsync(ISydneyRequest request) => throw new NotImplementedException();
+
+    public virtual Task<SydneyResponse> UpdateAsync(ISydneyRequest request) => throw new NotImplementedException();
+
+    public virtual Task<SydneyResponse> DeleteAsync(ISydneyRequest request) => throw new NotImplementedException();
+
+    private class ResourceHandlerImpl : RestHandlerBase
+    {
+        private readonly ResourceHandlerBase parent;
+
+        public ResourceHandlerImpl(ILoggerFactory loggerFactory, ResourceHandlerBase parent) : base(loggerFactory)
         {
-            this.CollectionHandler = new CollectionHandlerImpl(loggerFactory, this);
-            this.ResourceHandler = new ResourceHandlerImpl(loggerFactory, this);
+            this.parent = parent;
         }
 
-        internal RestHandlerBase CollectionHandler { get; }
+        public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
+            => this.parent.GetAsync(request);
 
-        internal RestHandlerBase ResourceHandler { get; }
+        public override Task<SydneyResponse> PutAsync(ISydneyRequest request)
+            => this.parent.UpdateAsync(request);
 
-        public virtual Task<SydneyResponse> ListAsync(ISydneyRequest request) => throw new NotImplementedException();
+        public override Task<SydneyResponse> PatchAsync(ISydneyRequest request)
+            => this.parent.UpdateAsync(request);
 
-        public virtual Task<SydneyResponse> GetAsync(ISydneyRequest request) => throw new NotImplementedException();
+        public override Task<SydneyResponse> DeleteAsync(ISydneyRequest request)
+            => this.parent.DeleteAsync(request);
+    }
 
-        public virtual Task<SydneyResponse> CreateAsync(ISydneyRequest request) => throw new NotImplementedException();
+    private class CollectionHandlerImpl : RestHandlerBase
+    {
+        private readonly ResourceHandlerBase parent;
 
-        public virtual Task<SydneyResponse> UpdateAsync(ISydneyRequest request) => throw new NotImplementedException();
-
-        public virtual Task<SydneyResponse> DeleteAsync(ISydneyRequest request) => throw new NotImplementedException();
-
-        private class ResourceHandlerImpl : RestHandlerBase
+        public CollectionHandlerImpl(ILoggerFactory loggerFactory, ResourceHandlerBase parent) : base(loggerFactory)
         {
-            private readonly ResourceHandlerBase parent;
-
-            public ResourceHandlerImpl(ILoggerFactory loggerFactory, ResourceHandlerBase parent) : base(loggerFactory)
-            {
-                this.parent = parent;
-            }
-
-            public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
-                => this.parent.GetAsync(request);
-
-            public override Task<SydneyResponse> PutAsync(ISydneyRequest request)
-                => this.parent.UpdateAsync(request);
-
-            public override Task<SydneyResponse> PatchAsync(ISydneyRequest request)
-                => this.parent.UpdateAsync(request);
-
-            public override Task<SydneyResponse> DeleteAsync(ISydneyRequest request)
-                => this.parent.DeleteAsync(request);
+            this.parent = parent;
         }
 
-        private class CollectionHandlerImpl : RestHandlerBase
-        {
-            private readonly ResourceHandlerBase parent;
+        public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
+            => this.parent.ListAsync(request);
 
-            public CollectionHandlerImpl(ILoggerFactory loggerFactory, ResourceHandlerBase parent) : base(loggerFactory)
-            {
-                this.parent = parent;
-            }
-
-            public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
-                => this.parent.ListAsync(request);
-
-            public override Task<SydneyResponse> PostAsync(ISydneyRequest request)
-                => this.parent.CreateAsync(request);
-        }
+        public override Task<SydneyResponse> PostAsync(ISydneyRequest request)
+            => this.parent.CreateAsync(request);
     }
 }
 

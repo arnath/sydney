@@ -15,6 +15,7 @@
     <Description>Sydney REST Framework</Description>
     <OutputType>Library</OutputType>
     <Nullable>enable</Nullable>
+    <RootNamespace>Sydney.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

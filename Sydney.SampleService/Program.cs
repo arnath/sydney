@@ -1,115 +1,114 @@
-﻿namespace Sydney.SampleService
+﻿namespace Sydney.SampleService;
+
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Sydney.Core;
+
+public class Program
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
-    using Serilog;
-    using Sydney.Core;
-
-    public class Program
+    public static async Task Main()
     {
-        public static async Task Main()
+        SydneyServiceConfig config =
+            SydneyServiceConfig.CreateHttp(
+                8080,
+                returnExceptionMessagesInResponse: true);
+        ILoggerFactory loggerFactory =
+            LoggerFactory.Create(
+                (builder) => builder.AddConsole().AddSerilog());
+        using (SydneyService service = new SydneyService(config, loggerFactory))
         {
-            SydneyServiceConfig config =
-                SydneyServiceConfig.CreateHttp(
-                    8080,
-                    returnExceptionMessagesInResponse: true);
-            ILoggerFactory loggerFactory =
-                LoggerFactory.Create(
-                    (builder) => builder.AddConsole().AddSerilog());
-            using (SydneyService service = new SydneyService(config, loggerFactory))
-            {
-                // Routes can have path parameters by enclosing a name in braces.
-                service.AddRestHandler("/books/{id}", new BooksHandler(loggerFactory));
+            // Routes can have path parameters by enclosing a name in braces.
+            service.AddRestHandler("/books/{id}", new BooksHandler(loggerFactory));
 
-                // Resource handlers register both the collection and individual resource URLs.
-                // In this case, it registers /posts and /posts/{id}.
-                service.AddResourceHandler("/posts", new PostsHandler(loggerFactory));
+            // Resource handlers register both the collection and individual resource URLs.
+            // In this case, it registers /posts and /posts/{id}.
+            service.AddResourceHandler("/posts", new PostsHandler(loggerFactory));
 
-                // Blocks until Ctrl+C or SIGBREAK is received.
-                await service.StartAsync();
-            }
+            // Blocks until Ctrl+C or SIGBREAK is received.
+            await service.StartAsync();
+        }
+    }
+
+    // A resource handler inherits from ResourceHandlerBase and supports the 5 standard
+    // operations as defined in Google's API Guidelines.
+    private class PostsHandler : ResourceHandlerBase
+    {
+        public PostsHandler(ILoggerFactory loggerFactory) : base(loggerFactory) { }
+
+        private readonly List<dynamic> posts = new();
+
+        // Override the functions for the HTTP methods you want to handle (the rest
+        // will return HTTP 405).
+        public override Task<SydneyResponse> ListAsync(ISydneyRequest request)
+        {
+            // Handlers must either return a SydneyResponse or throw an exception.
+            // A SydneyResponse contains an HttpStatusCode and an optional payload
+            // that is serialized as JSON (using System.Text.Json) and sent back to
+            // the client.
+            return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, posts));
         }
 
-        // A resource handler inherits from ResourceHandlerBase and supports the 5 standard
-        // operations as defined in Google's API Guidelines.
-        private class PostsHandler : ResourceHandlerBase
+        public override async Task<SydneyResponse> CreateAsync(ISydneyRequest request)
         {
-            public PostsHandler(ILoggerFactory loggerFactory) : base(loggerFactory) { }
-
-            private readonly List<dynamic> posts = new();
-
-            // Override the functions for the HTTP methods you want to handle (the rest
-            // will return HTTP 405).
-            public override Task<SydneyResponse> ListAsync(ISydneyRequest request)
+            // You can deserialize a request payload by calling request.DeserializeJsonAsync<T>().
+            // This will deserialize a JSON payload into whatever type you have defined.
+            dynamic post = await request.DeserializeJsonAsync<dynamic>();
+            if (post == null)
             {
-                // Handlers must either return a SydneyResponse or throw an exception.
-                // A SydneyResponse contains an HttpStatusCode and an optional payload
-                // that is serialized as JSON (using System.Text.Json) and sent back to
-                // the client.
-                return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, posts));
+                // Throwing an HttpResponseException (or subclass) from your handler will
+                // return the specified HttpStatusCode as a response and optionally the
+                // message as a response payload.
+                throw new HttpResponseException(HttpStatusCode.BadRequest, "Post is null");
             }
 
-            public override async Task<SydneyResponse> CreateAsync(ISydneyRequest request)
-            {
-                // You can deserialize a request payload by calling request.DeserializeJsonAsync<T>().
-                // This will deserialize a JSON payload into whatever type you have defined.
-                dynamic post = await request.DeserializeJsonAsync<dynamic>();
-                if (post == null)
-                {
-                    // Throwing an HttpResponseException (or subclass) from your handler will
-                    // return the specified HttpStatusCode as a response and optionally the
-                    // message as a response payload.
-                    throw new HttpResponseException(HttpStatusCode.BadRequest, "Post is null");
-                }
+            posts.Add(post);
 
-                posts.Add(post);
+            SydneyResponse response = new SydneyResponse(HttpStatusCode.OK);
 
-                SydneyResponse response = new SydneyResponse(HttpStatusCode.OK);
+            // You can add response headers via the response.Headers dictionary in the
+            // SydneyResponse class. Content-Type, Content-Length, and the response
+            // status code are set automatically.
+            response.Headers.Add("Cool-Custom-Header", "arandomvalue");
 
-                // You can add response headers via the response.Headers dictionary in the
-                // SydneyResponse class. Content-Type, Content-Length, and the response
-                // status code are set automatically.
-                response.Headers.Add("Cool-Custom-Header", "arandomvalue");
-
-                return response;
-            }
-
-            public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
-            {
-                // Throwing any other uncaught exception from your handler will
-                // return HTTP 500 and optionally the message as a response payload.
-                throw new InvalidOperationException("Not yet supported.");
-            }
+            return response;
         }
 
-        // A rest handler inherits from RestHandlerBase and supports all the standard
-        // HTTP methods. Other than this, the mechanisms are identical to a resource
-        // handler.
-        private class BooksHandler : RestHandlerBase
+        public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
         {
-            public BooksHandler(ILoggerFactory loggerFactory) : base(loggerFactory) { }
+            // Throwing any other uncaught exception from your handler will
+            // return HTTP 500 and optionally the message as a response payload.
+            throw new InvalidOperationException("Not yet supported.");
+        }
+    }
 
-            private readonly List<dynamic> books = new();
+    // A rest handler inherits from RestHandlerBase and supports all the standard
+    // HTTP methods. Other than this, the mechanisms are identical to a resource
+    // handler.
+    private class BooksHandler : RestHandlerBase
+    {
+        public BooksHandler(ILoggerFactory loggerFactory) : base(loggerFactory) { }
 
-            // Handles GET requests.
-            public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
-            {
-                // You can retrieve path parameters using the request.PathParameters
-                // dictionary. They are parsed as strings so you will need to convert
-                // them to other types if needed.
-                int bookId = int.Parse(request.PathParameters["id"]);
+        private readonly List<dynamic> books = new();
 
-                return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, books[bookId]));
-            }
+        // Handles GET requests.
+        public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
+        {
+            // You can retrieve path parameters using the request.PathParameters
+            // dictionary. They are parsed as strings so you will need to convert
+            // them to other types if needed.
+            int bookId = int.Parse(request.PathParameters["id"]);
 
-            // Handles OPTIONS requests.
-            public override Task<SydneyResponse> OptionsAsync(ISydneyRequest request)
-            {
-                return Task.FromResult(new SydneyResponse(HttpStatusCode.Accepted));
-            }
+            return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, books[bookId]));
+        }
+
+        // Handles OPTIONS requests.
+        public override Task<SydneyResponse> OptionsAsync(ISydneyRequest request)
+        {
+            return Task.FromResult(new SydneyResponse(HttpStatusCode.Accepted));
         }
     }
 }

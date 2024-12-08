@@ -1,90 +1,89 @@
-﻿namespace Sydney.Core
+﻿namespace Sydney.Core;
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+
+public class SydneyRequest : ISydneyRequest
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Net;
-    using System.Text.Json;
-    using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
+    private readonly HttpRequest httpRequest;
 
-    public class SydneyRequest : ISydneyRequest
+    private readonly Dictionary<Type, object?> deserializedPayloads = new Dictionary<Type, object?>();
+
+    internal SydneyRequest(HttpRequest httpRequest, IDictionary<string, string> pathParameters)
     {
-        private readonly HttpRequest httpRequest;
+        this.httpRequest = httpRequest ?? throw new ArgumentNullException(nameof(httpRequest));
+        this.PathParameters = pathParameters ?? throw new ArgumentNullException(nameof(pathParameters));
 
-        private readonly Dictionary<Type, object?> deserializedPayloads = new Dictionary<Type, object?>();
-
-        internal SydneyRequest(HttpRequest httpRequest, IDictionary<string, string> pathParameters)
+        if (!Enum.TryParse(httpRequest.Method, true, out HttpMethod httpMethod))
         {
-            this.httpRequest = httpRequest ?? throw new ArgumentNullException(nameof(httpRequest));
-            this.PathParameters = pathParameters ?? throw new ArgumentNullException(nameof(pathParameters));
-
-            if (!Enum.TryParse(httpRequest.Method, true, out HttpMethod httpMethod))
-            {
-                throw new ArgumentException(
-                    $"Request has an unsupported HTTP method {httpRequest.Method}.",
-                    nameof(httpRequest));
-            }
-
-            this.HttpMethod = httpMethod;
+            throw new ArgumentException(
+                $"Request has an unsupported HTTP method {httpRequest.Method}.",
+                nameof(httpRequest));
         }
 
-        public HttpMethod HttpMethod { get; }
+        this.HttpMethod = httpMethod;
+    }
 
-        public string? ContentType => this.httpRequest.ContentType;
+    public HttpMethod HttpMethod { get; }
 
-        public IDictionary<string, string> PathParameters { get; }
+    public string? ContentType => this.httpRequest.ContentType;
 
-        public bool IsHttps => this.httpRequest.IsHttps;
+    public IDictionary<string, string> PathParameters { get; }
 
-        public IHeaderDictionary Headers => this.httpRequest.Headers;
+    public bool IsHttps => this.httpRequest.IsHttps;
 
-        public IQueryCollection QueryParameters => this.httpRequest.Query;
+    public IHeaderDictionary Headers => this.httpRequest.Headers;
 
-        public bool HasEntityBody => this.ContentLength > 0;
+    public IQueryCollection QueryParameters => this.httpRequest.Query;
 
-        public long ContentLength => this.httpRequest.ContentLength.GetValueOrDefault();
+    public bool HasEntityBody => this.ContentLength > 0;
 
-        public string Path => this.httpRequest.Path;
+    public long ContentLength => this.httpRequest.ContentLength.GetValueOrDefault();
 
-        public Stream PayloadStream => this.httpRequest.Body;
+    public string Path => this.httpRequest.Path;
 
-        public async Task<TPayload?> DeserializeJsonAsync<TPayload>()
+    public Stream PayloadStream => this.httpRequest.Body;
+
+    public async Task<TPayload?> DeserializeJsonAsync<TPayload>()
+    {
+        if (!this.HasEntityBody)
         {
-            if (!this.HasEntityBody)
+            throw new InvalidOperationException("Cannot deserialize payload because there is no entity body.");
+        }
+
+        try
+        {
+            Type payloadType = typeof(TPayload);
+            if (this.deserializedPayloads.TryGetValue(payloadType, out object? value))
             {
-                throw new InvalidOperationException("Cannot deserialize payload because there is no entity body.");
+                return (TPayload?)value;
             }
 
-            try
+            if (this.PayloadStream.CanSeek)
             {
-                Type payloadType = typeof(TPayload);
-                if (this.deserializedPayloads.TryGetValue(payloadType, out object? value))
-                {
-                    return (TPayload?)value;
-                }
-
-                if (this.PayloadStream.CanSeek)
-                {
-                    this.PayloadStream.Seek(0, SeekOrigin.Begin);
-                }
-
-                TPayload? payload = await JsonSerializer.DeserializeAsync<TPayload>(
-                    this.PayloadStream,
-                    SydneyService.DefaultJsonSerializerOptions);
-
-                this.deserializedPayloads[payloadType] = payload;
-
-                return payload;
+                this.PayloadStream.Seek(0, SeekOrigin.Begin);
             }
-            catch (Exception exception)
-            {
-                // TODO: Get the payload as a string to give back in the message.
-                throw new HttpResponseException(
-                    HttpStatusCode.BadRequest,
-                    "Failed to deserialize request payload. See inner exception for details.",
-                    exception);
-            }
+
+            TPayload? payload = await JsonSerializer.DeserializeAsync<TPayload>(
+                this.PayloadStream,
+                SydneyService.DefaultJsonSerializerOptions);
+
+            this.deserializedPayloads[payloadType] = payload;
+
+            return payload;
+        }
+        catch (Exception exception)
+        {
+            // TODO: Get the payload as a string to give back in the message.
+            throw new HttpResponseException(
+                HttpStatusCode.BadRequest,
+                "Failed to deserialize request payload. See inner exception for details.",
+                exception);
         }
     }
 }
