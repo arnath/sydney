@@ -63,7 +63,11 @@ public class SydneyService : IDisposable
                 this.loggerFactory);
     }
 
-
+    /// <summary>
+    /// Starts the service asynchronously. If awaited, this method does not return
+    /// until the service is stopped. The service can be stopped by pressing Ctrl-C
+    /// or by calling StopAsync() from a different location.
+    /// </summary>
     public async Task StartAsync()
     {
         if (this.runningTaskCompletionSource != null)
@@ -98,6 +102,9 @@ public class SydneyService : IDisposable
         await this.runningTaskCompletionSource.Task;
     }
 
+    /// <summary>
+    /// Stops the service asynchronously.
+    /// </summary>
     public async Task StopAsync()
     {
         if (this.runningTaskCompletionSource == null)
@@ -116,6 +123,11 @@ public class SydneyService : IDisposable
         Console.CancelKeyPress -= this.HandleControlC;
     }
 
+    /// <summary>
+    /// Adds a REST handler for the specified path.
+    /// </summary>
+    /// <param name="path">The path for the handler.</param>
+    /// <param name="handler">The handler to add.</param>
     public void AddRestHandler(string path, RestHandlerBase handler)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(path);
@@ -129,6 +141,12 @@ public class SydneyService : IDisposable
         this.router.AddRoute(path, handler);
     }
 
+    /// <summary>
+    /// Adds a resource handler for the specified path.
+    /// </summary>
+    /// <param name="collectionPath">The collection path for the handler.
+    /// For example, if the resource type is jobs, the path could be "/prefix/jobs". </param>
+    /// <param name="handler">The handler to add.</param>
     public void AddResourceHandler(string collectionPath, ResourceHandlerBase handler)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(collectionPath);

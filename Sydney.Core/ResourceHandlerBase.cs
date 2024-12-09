@@ -15,14 +15,39 @@ public abstract class ResourceHandlerBase
 
     internal RestHandlerBase ResourceHandler { get; }
 
+    /// <summary>
+    /// Handles a List request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
     public virtual Task<SydneyResponse> ListAsync(ISydneyRequest request) => throw new NotImplementedException();
 
+    /// <summary>
+    /// Handles a Get request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
     public virtual Task<SydneyResponse> GetAsync(ISydneyRequest request) => throw new NotImplementedException();
 
+    /// <summary>
+    /// Handles a Create request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
     public virtual Task<SydneyResponse> CreateAsync(ISydneyRequest request) => throw new NotImplementedException();
 
+    /// <summary>
+    /// Handles an Update request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
     public virtual Task<SydneyResponse> UpdateAsync(ISydneyRequest request) => throw new NotImplementedException();
 
+    /// <summary>
+    /// Handles a Delete request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
     public virtual Task<SydneyResponse> DeleteAsync(ISydneyRequest request) => throw new NotImplementedException();
 
     private class ResourceHandlerImpl : RestHandlerBase

@@ -60,6 +60,11 @@ public interface ISydneyRequest
     /// <summary>
     /// Deserializes the JSON request payload into the specified type. Throws
     /// an exception if no payload is present or it cannot be deserialized.
+    ///
+    /// Note: The default implementation of this method in the SydneyRequest class
+    /// caches the deserialized payload (per type) for subsequent calls.
     /// </summary>
+    /// <typeparam name="TPayload">The type to deserialize the payload into.</typeparam>
+    /// <returns>The deserialized payload.</returns>
     Task<TPayload?> DeserializeJsonAsync<TPayload>();
 }
