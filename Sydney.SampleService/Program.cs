@@ -60,6 +60,17 @@ public class Program
 
             return Task.CompletedTask;
         }
+
+        public override Task<SydneyResponse> PostHandlerHookAsync(SydneyRequest request, SydneyResponse response)
+        {
+            // There's no reason to do this in an auth middleware but as an example,
+            // middlewares can change the response in a post handler hook by returning
+            // a new SydneyResponse.
+            return Task.FromResult(
+                new SydneyResponse(
+                    HttpStatusCode.Processing,
+                    new { Message = "Here's a new response" }));
+        }
     }
 
     // A resource handler inherits from ResourceHandlerBase and supports the 5 standard
