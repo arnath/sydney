@@ -122,7 +122,7 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
                 "Request Complete: path={Path}, method={Method}, status code={StatusCode}, elapsed={ElapsedMilliseconds}ms.",
                 request.Path,
                 request.HttpMethod,
-                response.StatusCode,
+                (int)response.StatusCode,
                 stopwatch.ElapsedMilliseconds);
 
             return response;
@@ -137,7 +137,7 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
                         "Request Failed: path={Path}, method={Method}, status code={StatusCode}, elapsed={ElapsedMilliseconds}ms, message={Message}",
                         request.Path,
                         request.HttpMethod,
-                        hre.StatusCode,
+                        (int)hre.StatusCode,
                         stopwatch.ElapsedMilliseconds,
                         hre.Message);
                     statusCode = hre.StatusCode;
