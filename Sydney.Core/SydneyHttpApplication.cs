@@ -63,7 +63,7 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
         }
 
         // Create and handle the request.
-        SydneyRequest request = new SydneyRequest(context.Request, match.PathParameters);
+        HttpContextSydneyRequest request = new HttpContextSydneyRequest(context.Request, match.PathParameters);
         SydneyResponse response = await this.HandleRequestAsync(request, match.Handler);
 
         // Write the response to context.Response.
@@ -86,7 +86,7 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
         await context.Response.CompleteAsync();
     }
 
-    private async Task<SydneyResponse> HandleRequestAsync(ISydneyRequest request, RestHandlerBase handler)
+    private async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, RestHandlerBase handler)
     {
         this.logger.LogInformation(
             "Request Received: path={Path}, method={Method}.",

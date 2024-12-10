@@ -8,47 +8,77 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-public class SydneyRequest : ISydneyRequest
+/// <summary>
+/// Abstract class that represents a request sent to a Sydney service. This class
+/// primarily exists for testing purposes because the default implementation
+/// requires an HTTP request object from ASP.NET Core
+/// </summary>
+public abstract class SydneyRequest
 {
-    private readonly HttpRequest httpRequest;
-
+    /// <summary>
+    /// Cache for deserialized JSON payloads to avoid re-reading the stream. Caches
+    /// the payload per deserialized type.
+    /// </summary>
     private readonly Dictionary<Type, object?> deserializedPayloads = new Dictionary<Type, object?>();
 
-    internal SydneyRequest(HttpRequest httpRequest, IDictionary<string, string> pathParameters)
-    {
-        this.httpRequest = httpRequest ?? throw new ArgumentNullException(nameof(httpRequest));
-        this.PathParameters = pathParameters ?? throw new ArgumentNullException(nameof(pathParameters));
+    /// <summary>
+    /// Gets the HTTP method specified by the client.
+    /// </summary>
+    public abstract HttpMethod HttpMethod { get; }
 
-        if (!Enum.TryParse(httpRequest.Method, true, out HttpMethod httpMethod))
-        {
-            throw new ArgumentException(
-                $"Request has an unsupported HTTP method {httpRequest.Method}.",
-                nameof(httpRequest));
-        }
+    /// <summary>
+    /// Gets the value of the Content-Type header.
+    /// </summary>
+    public abstract string? ContentType { get; }
 
-        this.HttpMethod = httpMethod;
-    }
+    /// <summary>
+    /// Gets the parsed path parameters from the incoming client request.
+    /// </summary>
+    public abstract IDictionary<string, string> PathParameters { get; }
 
-    public HttpMethod HttpMethod { get; }
+    /// <summary>
+    /// Gets a boolean value indicating whether the request is using HTTPs.
+    /// </summary>
+    public abstract bool IsHttps { get; }
 
-    public string? ContentType => this.httpRequest.ContentType;
+    /// <summary>
+    /// Gets the collection of headers sent in the request.
+    /// </summary>
+    public abstract IHeaderDictionary Headers { get; }
 
-    public IDictionary<string, string> PathParameters { get; }
+    /// <summary>
+    /// Gets the parsed query string parameters sent in the request.
+    /// </summary>
+    public abstract IQueryCollection QueryParameters { get; }
 
-    public bool IsHttps => this.httpRequest.IsHttps;
+    /// <summary>
+    /// Gets a bool value that indicates whether the rquest has a body.
+    /// </summary>
+    public abstract bool HasEntityBody { get; }
 
-    public IHeaderDictionary Headers => this.httpRequest.Headers;
+    /// <summary>
+    /// Gets the length of the body included in the request.
+    /// </summary>
+    public abstract long ContentLength { get; }
 
-    public IQueryCollection QueryParameters => this.httpRequest.Query;
+    /// <summary>
+    /// Gets a stream that contains the body included in the request.
+    /// </summary>
+    public abstract Stream PayloadStream { get; }
 
-    public bool HasEntityBody => this.ContentLength > 0;
+    /// <summary>
+    /// Gets the request path.
+    /// </summary>
+    public abstract string Path { get; }
 
-    public long ContentLength => this.httpRequest.ContentLength.GetValueOrDefault();
-
-    public string Path => this.httpRequest.Path;
-
-    public Stream PayloadStream => this.httpRequest.Body;
-
+    /// <summary>
+    /// Deserializes the JSON request payload into the specified type. Throws
+    /// an exception if no payload is present or it cannot be deserialized.
+    ///
+    /// Note: This method caches the deserialized payload (per type) for subsequent calls.
+    /// </summary>
+    /// <typeparam name="TPayload">The type to deserialize the payload into.</typeparam>
+    /// <returns>The deserialized payload.</returns>
     public async Task<TPayload?> DeserializeJsonAsync<TPayload>()
     {
         if (!this.HasEntityBody)

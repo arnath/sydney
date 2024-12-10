@@ -1,4 +1,4 @@
-namespace Sydney.Core;
+﻿namespace Sydney.Core;
 
 using System.Threading.Tasks;
 
@@ -11,7 +11,7 @@ public abstract class SydneyMiddleware
     /// return the specified status code to the client.
     /// </summary>
     /// <param name="request">The incoming request.</param>
-    public virtual Task PreHandlerHookAsync(ISydneyRequest request)
+    public virtual Task PreHandlerHookAsync(SydneyRequest request)
     {
         return Task.CompletedTask;
     }
@@ -25,7 +25,7 @@ public abstract class SydneyMiddleware
     /// <param name="request">The incoming request.</param>
     /// <param name="response">The response from the handler.</param>
     /// <returns>An optional modified response.</returns>
-    public virtual Task<SydneyResponse?> PostHandlerHookAsync(ISydneyRequest request, SydneyResponse response)
+    public virtual Task<SydneyResponse?> PostHandlerHookAsync(SydneyRequest request, SydneyResponse response)
     {
         return Task.FromResult<SydneyResponse?>(null);
     }

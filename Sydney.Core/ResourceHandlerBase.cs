@@ -20,35 +20,35 @@ public abstract class ResourceHandlerBase
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> ListAsync(ISydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> ListAsync(SydneyRequest request) => throw new NotImplementedException();
 
     /// <summary>
     /// Handles a Get request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> GetAsync(ISydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> GetAsync(SydneyRequest request) => throw new NotImplementedException();
 
     /// <summary>
     /// Handles a Create request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> CreateAsync(ISydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> CreateAsync(SydneyRequest request) => throw new NotImplementedException();
 
     /// <summary>
     /// Handles an Update request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> UpdateAsync(ISydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> UpdateAsync(SydneyRequest request) => throw new NotImplementedException();
 
     /// <summary>
     /// Handles a Delete request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> DeleteAsync(ISydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) => throw new NotImplementedException();
 
     private class ResourceHandlerImpl : RestHandlerBase
     {
@@ -59,16 +59,16 @@ public abstract class ResourceHandlerBase
             this.parent = parent;
         }
 
-        public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
+        public override Task<SydneyResponse> GetAsync(SydneyRequest request)
             => this.parent.GetAsync(request);
 
-        public override Task<SydneyResponse> PutAsync(ISydneyRequest request)
+        public override Task<SydneyResponse> PutAsync(SydneyRequest request)
             => this.parent.UpdateAsync(request);
 
-        public override Task<SydneyResponse> PatchAsync(ISydneyRequest request)
+        public override Task<SydneyResponse> PatchAsync(SydneyRequest request)
             => this.parent.UpdateAsync(request);
 
-        public override Task<SydneyResponse> DeleteAsync(ISydneyRequest request)
+        public override Task<SydneyResponse> DeleteAsync(SydneyRequest request)
             => this.parent.DeleteAsync(request);
     }
 
@@ -81,10 +81,10 @@ public abstract class ResourceHandlerBase
             this.parent = parent;
         }
 
-        public override Task<SydneyResponse> GetAsync(ISydneyRequest request)
+        public override Task<SydneyResponse> GetAsync(SydneyRequest request)
             => this.parent.ListAsync(request);
 
-        public override Task<SydneyResponse> PostAsync(ISydneyRequest request)
+        public override Task<SydneyResponse> PostAsync(SydneyRequest request)
             => this.parent.CreateAsync(request);
     }
 }

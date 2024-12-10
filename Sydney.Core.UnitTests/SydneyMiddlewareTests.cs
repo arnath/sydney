@@ -1,4 +1,4 @@
-namespace Sydney.Core.UnitTests;
+﻿namespace Sydney.Core.UnitTests;
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
