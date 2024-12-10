@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Serilog;
 using Sydney.Core;
 
@@ -12,13 +13,14 @@ public class Program
 {
     public static async Task Main()
     {
-        SydneyServiceConfig config =
-            SydneyServiceConfig.CreateHttp(
-                8080,
-                returnExceptionMessagesInResponse: true);
         ILoggerFactory loggerFactory =
             LoggerFactory.Create(
                 (builder) => builder.AddConsole().AddSerilog());
+        SydneyServiceConfig config =
+            SydneyServiceConfig.CreateHttp(
+                8080,
+                returnExceptionMessagesInResponse: true,
+                new AuthMiddleware());
         using (SydneyService service = new SydneyService(loggerFactory, config))
         {
             // Routes can have path parameters by enclosing a name in braces.
@@ -30,6 +32,33 @@ public class Program
 
             // Blocks until Ctrl+C or SIGBREAK is received.
             await service.StartAsync();
+        }
+    }
+
+    // Middleware can be added to the service to perform pre and post handler processing.
+    // In this example, we create a simple authentication middleware. The PreHandlerHookAsync
+    // method is called before the request handler is executed and can throw exceptions to
+    // return a response to the client.
+    private class AuthMiddleware : SydneyMiddleware
+    {
+        public override Task PreHandlerHookAsync(SydneyRequest request)
+        {
+            if (!request.Headers.TryGetValue("Authorization", out StringValues authHeaderValues))
+            {
+                throw new HttpResponseException(
+                    HttpStatusCode.Unauthorized,
+                    "No authorization header.");
+            }
+
+            string authHeader = authHeaderValues.ToString();
+            if (authHeader != "supersecret")
+            {
+                throw new HttpResponseException(
+                    HttpStatusCode.Unauthorized,
+                    "Invalid authorization header.");
+            }
+
+            return Task.CompletedTask;
         }
     }
 
@@ -90,7 +119,6 @@ public class Program
     {
         private readonly List<dynamic> books = new();
 
-        // Handles GET requests.
         public override Task<SydneyResponse> GetAsync(SydneyRequest request)
         {
             // You can retrieve path parameters using the request.PathParameters
@@ -101,7 +129,6 @@ public class Program
             return Task.FromResult(new SydneyResponse(HttpStatusCode.OK, books[bookId]));
         }
 
-        // Handles OPTIONS requests.
         public override Task<SydneyResponse> OptionsAsync(SydneyRequest request)
         {
             return Task.FromResult(new SydneyResponse(HttpStatusCode.Accepted));
