@@ -1,114 +1,117 @@
-﻿namespace Sydney.Core.UnitTests
+﻿namespace Sydney.Core.UnitTests;
+
+using System;
+using System.Threading.Tasks;
+using FakeItEasy;
+using Microsoft.Extensions.Logging.Abstractions;
+using Xunit;
+
+public class SydneyServiceTests
 {
-    using System;
-    using FakeItEasy;
-    using Microsoft.Extensions.Logging.Abstractions;
-    using Xunit;
-
-    public class SydneyServiceTests
+    [Fact]
+    public void SydneyServiceConstructorThrowsExceptionIfLoggerFactoryIsNull()
     {
-        [Fact]
-        public void SydneyServiceConstructorThrowsExceptionIfConfigIsNull()
-        {
-            Exception exception = Record.Exception(() => new SydneyService(null, NullLoggerFactory.Instance));
+        ArgumentNullException exception =
+            Assert.Throws<ArgumentNullException>(
+                () => new SydneyService(null, SydneyServiceConfig.CreateHttp()));
+        Assert.Equal("loggerFactory", exception.ParamName);
+    }
 
-            ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
-            Assert.Equal("config", argumentNullException.ParamName);
-        }
+    [Fact]
+    public void SydneyServiceConstructorThrowsExceptionIfConfigIsNull()
+    {
+        ArgumentNullException exception =
+            Assert.Throws<ArgumentNullException>(
+                () => new SydneyService(NullLoggerFactory.Instance, null));
+        Assert.Equal("config", exception.ParamName);
+    }
 
-        [Fact]
-        public void SydneyServiceConstructorThrowsExceptionIfLoggerFactoryIsNull()
-        {
-            SydneyServiceConfig config = new SydneyServiceConfig(80);
-            Exception exception = Record.Exception(() => new SydneyService(config, null));
+    [Fact]
+    public void SydneyServiceConstructorCallsValidateOnConfig()
+    {
+        SydneyServiceConfig config = A.Fake<SydneyServiceConfig>();
+        config.UseHttps = false;
+        config.Port = 80;
 
-            ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
-            Assert.Equal("loggerFactory", argumentNullException.ParamName);
-        }
+        SydneyService service = new SydneyService(NullLoggerFactory.Instance, config);
 
-        [Fact]
-        public void SydneyServiceConstructorCallsValidateOnConfig()
-        {
-            SydneyServiceConfig config = A.Fake<SydneyServiceConfig>();
-            config.Port = 80;
+        A.CallTo(() => config.Validate()).MustHaveHappenedOnceExactly();
+    }
 
-            SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
+    [Fact]
+    public async Task StartAsyncThrowsInvalidOperationExceptionWhenServiceIsAlreadyRunning()
+    {
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            SydneyServiceConfig.CreateHttp());
 
-            A.CallTo(() => config.Validate()).MustHaveHappenedOnceExactly();
-        }
+        // Don't await start because it never returns.
+        _ = service.StartAsync();
+        InvalidOperationException exception =
+            await Assert.ThrowsAsync<InvalidOperationException>(service.StartAsync);
+        await service.StopAsync();
 
-        [Fact]
-        public async void StartAsyncThrowsInvalidOperationExceptionWhenServiceIsAlreadyRunning()
-        {
-            SydneyServiceConfig config = new SydneyServiceConfig(80);
-            SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
+        Assert.Equal(
+            "Service has already been started.",
+            exception.Message);
+    }
 
-            // Don't await start because it never returns.
-            service.StartAsync();
-            Exception exception = await Record.ExceptionAsync(service.StartAsync);
-            await service.StopAsync();
+    [Fact]
+    public async Task StopAsyncThrowsInvalidOperationExceptionWhenServiceIsNotRunning()
+    {
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            SydneyServiceConfig.CreateHttp());
 
-            Assert.IsType<InvalidOperationException>(exception);
-            Assert.Equal(
-                "Service has already been started.",
-                exception.Message);
-        }
+        InvalidOperationException exception =
+            await Assert.ThrowsAsync<InvalidOperationException>(service.StopAsync);
+        Assert.Equal(
+            "Cannot stop the service when it has not been started.",
+            exception.Message);
+    }
 
-        [Fact]
-        public async void StopAsyncThrowsInvalidOperationExceptionWhenServiceIsNotRunning()
-        {
-            SydneyServiceConfig config = new SydneyServiceConfig(80);
-            SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
+    [Fact]
+    public void AddRestHandlerThrowsArgumentNullExceptionWhenPathIsNull()
+    {
+        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            SydneyServiceConfig.CreateHttp());
 
-            Exception exception = await Record.ExceptionAsync(service.StopAsync);
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
+            () => service.AddRestHandler(null, handler));
+        Assert.Equal("path", exception.ParamName);
+    }
 
-            Assert.IsType<InvalidOperationException>(exception);
-            Assert.Equal(
-                "Cannot stop the service when it has not been started.",
-                exception.Message);
-        }
+    [Fact]
+    public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
+    {
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            SydneyServiceConfig.CreateHttp());
 
-        [Fact]
-        public void AddRestHandlerThrowsArgumentNullExceptionWhenPathIsNull()
-        {
-            SydneyServiceConfig config = new SydneyServiceConfig(80);
-            RestHandlerBase handler = A.Fake<RestHandlerBase>();
-            SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
+        ArgumentNullException exception =
+            Assert.Throws<ArgumentNullException>(
+                () => service.AddRestHandler("/foo/bar", null));
+        Assert.Equal("handler", exception.ParamName);
+    }
 
-            Exception exception = Record.Exception(() => service.AddRestHandler(null, handler));
+    [Fact]
+    public async Task AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
+    {
+        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            SydneyServiceConfig.CreateHttp());
 
-            ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
-            Assert.Equal("path", argumentNullException.ParamName);
-        }
+        // Don't await start because it never returns.
+        _ = service.StartAsync();
+        Exception exception = Assert.Throws<InvalidOperationException>(
+            () => service.AddRestHandler("/foo/bar", handler));
+        await service.StopAsync();
 
-        [Fact]
-        public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
-        {
-            SydneyServiceConfig config = new SydneyServiceConfig(80);
-            SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
-
-            Exception exception = Record.Exception(() => service.AddRestHandler("/foo/bar", null));
-
-            ArgumentNullException argumentNullException = Assert.IsType<ArgumentNullException>(exception);
-            Assert.Equal("handler", argumentNullException.ParamName);
-        }
-
-        [Fact]
-        public async void AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
-        {
-            SydneyServiceConfig config = new SydneyServiceConfig(80);
-            RestHandlerBase handler = A.Fake<RestHandlerBase>();
-            SydneyService service = new SydneyService(config, NullLoggerFactory.Instance);
-
-            // Don't await start because it never returns.
-            service.StartAsync();
-            Exception exception = Record.Exception(() => service.AddRestHandler("/foo/bar", handler));
-            await service.StopAsync();
-
-            Assert.IsType<InvalidOperationException>(exception);
-            Assert.Equal(
-                "Cannot add a handler after the service has been started.",
-                exception.Message);
-        }
+        Assert.Equal(
+            "Cannot add a handler after the service has been started.",
+            exception.Message);
     }
 }

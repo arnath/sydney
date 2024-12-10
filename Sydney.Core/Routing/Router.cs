@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
 
     internal class Router
     {
@@ -39,19 +40,19 @@
             for (int i = 0; i < segments.Length; i++)
             {
                 string segment = segments[i];
-                if (segment == null || segment.Length == 0)
+                if (string.IsNullOrWhiteSpace(segment))
                 {
-                    throw new ArgumentException("Route segments must be at least one character long.", nameof(route));
+                    throw new InvalidOperationException("Route segments must be at least one non-whitespace character long.");
                 }
 
                 RouteNode child;
-                if (TryGetParameterName(segment, out string parameterName))
+                if (TryGetParameterName(segment, out string? parameterName))
                 {
                     // If this segment is a parameter, validate that the name is unique
                     // and add a parameter node to the tree.
                     if (parameterNames.Contains(parameterName))
                     {
-                        throw new ArgumentException("Routes cannot use the same parameter name twice.", nameof(route));
+                        throw new InvalidOperationException($"The parameter name {parameterName} is used twice in this route. Parameters must be unique.");
                     }
 
                     parameterNames.Add(parameterName);
@@ -85,7 +86,7 @@
 
             // Try to find a matching handler node for this path.
             string[] segments = path.Split('/');
-            HandlerRouteNode? handlerNode = this.MatchPathRecursive(this.root, segments, -1);
+            HandlerRouteNode? handlerNode = MatchPathRecursive(this.root, segments, -1);
             if (handlerNode != null)
             {
                 // If we found a handler, traverse back up the path to gather
@@ -111,7 +112,7 @@
             return false;
         }
 
-        private HandlerRouteNode? MatchPathRecursive(RouteNode node, string[] segments, int index)
+        private static HandlerRouteNode? MatchPathRecursive(RouteNode node, string[] segments, int index)
         {
             if (node is HandlerRouteNode handlerNode && index == segments.Length)
             {
@@ -127,10 +128,10 @@
                 // 3) The node matches the current segment.
                 foreach (RouteNode child in node.Children)
                 {
-                    handlerNode = this.MatchPathRecursive(child, segments, index + 1);
-                    if (handlerNode != null)
+                    HandlerRouteNode? childHandlerNode = MatchPathRecursive(child, segments, index + 1);
+                    if (childHandlerNode != null)
                     {
-                        return handlerNode;
+                        return childHandlerNode;
                     }
                 }
             }
@@ -138,7 +139,9 @@
             return null;
         }
 
-        private static bool TryGetParameterName(string segment, out string? parameterName)
+        private static bool TryGetParameterName(
+            string segment,
+            [NotNullWhen(returnValue: true)] out string? parameterName)
         {
             if (segment[0] == '{' && segment[segment.Length - 1] == '}')
             {

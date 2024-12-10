@@ -1,15 +1,16 @@
-﻿namespace Sydney.Core
+﻿namespace Sydney.Core;
+
+/// <summary>
+/// Internal replacement for the HTTP method from the Kestrel HttpRequest
+/// class, which uses a string for some reason.
+/// </summary>
+public enum HttpMethod
 {
-    // For some reason, the method in the Kestrel HttpRequest class is a
-    // string, so we turn it into this for easier handling.
-    public enum HttpMethod
-    {
-        Get = 0,
-        Post,
-        Delete,
-        Put,
-        Head,
-        Patch,
-        Options
-    }
+    Get = 0,
+    Post,
+    Delete,
+    Put,
+    Head,
+    Patch,
+    Options
 }

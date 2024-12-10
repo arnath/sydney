@@ -1,130 +1,106 @@
-﻿namespace Sydney.Core
+﻿namespace Sydney.Core;
+
+using System;
+using System.Threading.Tasks;
+
+/// <summary>
+/// Base class for a standard REST based handler. Provides handler hooks for
+/// the standard REST HTTP methods: GET, POST, DELETE, PUT, HEAD, PATCH, and OPTIONS.
+///
+/// It's recommended that you use <see cref="ResourceHandlerBase"/> instead of this
+/// because it forces you to use better semantics when creating your API. Also, if
+/// you use this class, the collection URL and individual item URL need to be registered
+/// as separate handlers.
+/// </summary>
+public abstract class RestHandlerBase
 {
-    using System;
-    using System.Diagnostics;
-    using System.Net;
-    using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
-
-    public abstract class RestHandlerBase
+    /// <summary>
+    /// Handles the request asynchronously based on the HTTP method.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A task that represents the asynchronous operation, with the response.</returns>
+    internal virtual Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
     {
-        private readonly ILogger logger;
-
-        protected RestHandlerBase(ILoggerFactory loggerFactory)
+        switch (request.HttpMethod)
         {
-            this.logger = loggerFactory.CreateLogger<RestHandlerBase>();
+            case HttpMethod.Get:
+                return this.GetAsync(request);
+
+            case HttpMethod.Post:
+                return this.PostAsync(request);
+
+            case HttpMethod.Delete:
+                return this.DeleteAsync(request);
+
+            case HttpMethod.Put:
+                return this.PutAsync(request);
+
+            case HttpMethod.Head:
+                return this.HeadAsync(request);
+
+            case HttpMethod.Patch:
+                return this.PatchAsync(request);
+
+            case HttpMethod.Options:
+                return this.OptionsAsync(request);
         }
 
-        internal virtual async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, bool returnExceptionMessagesInResponse)
-        {
-            this.logger.LogInformation(
-                "Request Received: path={Path}, method={Method}.",
-                request.Path,
-                request.HttpMethod);
-
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                SydneyResponse response;
-                switch (request.HttpMethod)
-                {
-                    case HttpMethod.Get:
-                        response = await this.GetAsync(request);
-                        break;
-
-                    case HttpMethod.Post:
-                        response = await this.PostAsync(request);
-                        break;
-
-                    case HttpMethod.Delete:
-                        response = await this.DeleteAsync(request);
-                        break;
-
-                    case HttpMethod.Put:
-                        response = await this.PutAsync(request);
-                        break;
-
-                    case HttpMethod.Head:
-                        response = await this.HeadAsync(request);
-                        break;
-
-                    case HttpMethod.Patch:
-                        response = await this.PatchAsync(request);
-                        break;
-
-                    case HttpMethod.Options:
-                        response = await this.OptionsAsync(request);
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
-
-                this.logger.LogInformation(
-                    "Request Complete: path={Path}, method={Method}, status code={StatusCode}, elapsed={ElapsedMilliseconds}ms.",
-                    request.Path,
-                    request.HttpMethod,
-                    response.StatusCode,
-                    stopwatch.ElapsedMilliseconds);
-
-                return response;
-            }
-            catch (Exception exception)
-            {
-                HttpStatusCode statusCode = HttpStatusCode.InternalServerError;
-                switch (exception)
-                {
-                    case HttpResponseException hre:
-                        this.logger.LogInformation(
-                            "Request Failed: path={Path}, method={Method}, status code={StatusCode}, elapsed={ElapsedMilliseconds}ms, message={Message}",
-                            request.Path,
-                            request.HttpMethod,
-                            hre.StatusCode,
-                            stopwatch.ElapsedMilliseconds,
-                            hre.Message);
-                        statusCode = hre.StatusCode;
-                        break;
-
-                    case NotImplementedException nie:
-                        this.logger.LogWarning(
-                            nie,
-                            "Request Failed (method not allowed): path={Path}, method={Method}",
-                            request.Path,
-                            request.HttpMethod);
-                        statusCode = HttpStatusCode.MethodNotAllowed;
-                        break;
-
-                    default:
-                        this.logger.LogError(
-                            exception,
-                            "Request Failed: path={Path}, method={Method}, elapsed={Elapsed}ms, exception={Exception}",
-                            request.Path,
-                            request.HttpMethod,
-                            stopwatch.ElapsedMilliseconds,
-                            exception);
-                        break;
-                }
-
-                return
-                    new SydneyResponse(
-                        statusCode,
-                        returnExceptionMessagesInResponse ? exception.Message : null);
-            }
-        }
-
-        public virtual Task<SydneyResponse> GetAsync(ISydneyRequest request) => throw new NotImplementedException();
-
-        public virtual Task<SydneyResponse> PostAsync(ISydneyRequest request) => throw new NotImplementedException();
-
-        public virtual Task<SydneyResponse> DeleteAsync(ISydneyRequest request) => throw new NotImplementedException();
-
-        public virtual Task<SydneyResponse> PutAsync(ISydneyRequest request) => throw new NotImplementedException();
-
-        public virtual Task<SydneyResponse> HeadAsync(ISydneyRequest request) => throw new NotImplementedException();
-
-        public virtual Task<SydneyResponse> PatchAsync(ISydneyRequest request) => throw new NotImplementedException();
-
-        public virtual Task<SydneyResponse> OptionsAsync(ISydneyRequest request) => throw new NotImplementedException();
+        throw new NotImplementedException();
     }
+
+    /// <summary>
+    /// Handles a GET request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
+    public virtual Task<SydneyResponse> GetAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
+
+    /// <summary>
+    /// Handles a POST request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
+    public virtual Task<SydneyResponse> PostAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
+
+    /// <summary>
+    /// Handles a DELETE request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
+    public virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
+
+    /// <summary>
+    /// Handles a PUT request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
+    public virtual Task<SydneyResponse> PutAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
+
+    /// <summary>
+    /// Handles a HEAD request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
+    public virtual Task<SydneyResponse> HeadAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
+
+    /// <summary>
+    /// Handles a PATCH request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
+    public virtual Task<SydneyResponse> PatchAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
+
+    /// <summary>
+    /// Handles an OPTIONS request.
+    /// </summary>
+    /// <param name="request">The incoming request.</param>
+    /// <returns>A response with optional payload.</returns>
+    public virtual Task<SydneyResponse> OptionsAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
 }
