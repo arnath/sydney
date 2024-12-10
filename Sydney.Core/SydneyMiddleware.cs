@@ -2,6 +2,11 @@
 
 using System.Threading.Tasks;
 
+/// <summary>
+/// Base class for middleware that can be added to a Sydney service. Provides
+/// hooks for pre and post handler processing. If either method is unimplemented
+/// by your subclass, the base implementation does nothing.
+/// </summary>
 public abstract class SydneyMiddleware
 {
     /// <summary>

@@ -11,9 +11,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sydney.Core.Routing;
 
+/// <summary>
+/// Represents a Sydney service. This class is the primary entry point for interacting
+/// with Sydney and allows you to register handlers and start and stop the service.
+/// When started, the service will run until stopped or Ctrl+C is pressed.
+/// </summary>
 public class SydneyService : IDisposable
 {
-    public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    internal static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
@@ -27,17 +32,24 @@ public class SydneyService : IDisposable
 
     private TaskCompletionSource? runningTaskCompletionSource;
 
-    public SydneyService(SydneyServiceConfig config, ILoggerFactory loggerFactory)
+    /// <summary>
+    /// Creates a new instance of the SydneyService class.
+    /// </summary>
+    /// <param name="loggerFactory">A logger factory used to create loggers within the service.</param>
+    /// <param name="config">The configuration for the Sydney service.</param>
+    /// <exception cref="ArgumentNullException">Thrown when config or loggerFactory is null.</exception>
+    public SydneyService(ILoggerFactory loggerFactory, SydneyServiceConfig config)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
-        this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        this.loggerFactory = loggerFactory
+            ?? throw new ArgumentNullException(nameof(loggerFactory));
         this.logger = this.loggerFactory.CreateLogger<SydneyService>();
 
         config.Validate();
 
         this.router = new Router();
 
-        // Listen on any IP on the configured port.
+        // Listen on any IP on the configured port. Use HTTPs if specified.
         KestrelServerOptions serverOptions = new KestrelServerOptions();
         serverOptions.ListenAnyIP(
             config.Port,
@@ -124,7 +136,7 @@ public class SydneyService : IDisposable
     }
 
     /// <summary>
-    /// Adds a REST handler for the specified path.
+    /// Adds a <see cref="RestHandlerBase"/> for the specified path.
     /// </summary>
     /// <param name="path">The path for the handler.</param>
     /// <param name="handler">The handler to add.</param>
@@ -142,7 +154,7 @@ public class SydneyService : IDisposable
     }
 
     /// <summary>
-    /// Adds a resource handler for the specified path.
+    /// Adds a <see cref="ResourceHandlerBase"/> for the specified path.
     /// </summary>
     /// <param name="collectionPath">The collection path for the handler.
     /// For example, if the resource type is jobs, the path could be "/prefix/jobs". </param>
@@ -160,6 +172,8 @@ public class SydneyService : IDisposable
         // Trim leading and trailing slashes from the path.
         collectionPath = collectionPath.Trim('/');
 
+        // Internally, a resource handler registers two routes: one rest handler for
+        // the collection route and one rest handler for the resource route.
         this.router.AddRoute(collectionPath, handler.CollectionHandler);
         this.router.AddRoute($"{collectionPath}/{{id}}", handler.ResourceHandler);
     }

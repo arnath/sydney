@@ -4,6 +4,11 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
 
+/// <summary>
+/// Represents a response from a Sydney service. This class is used to return
+/// a value from your handlers. It allows specifying a status code, headers to
+/// add to the response, and a payload that is automatically serialized to JSON.
+/// </summary>
 public class SydneyResponse
 {
     /// <summary>

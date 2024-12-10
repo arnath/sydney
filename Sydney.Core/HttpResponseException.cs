@@ -34,8 +34,10 @@ public class HttpResponseException : Exception
     {
     }
 
-    public HttpResponseException(HttpStatusCode statusCode, string? message, Exception? innerException)
-        : base(message, innerException)
+    public HttpResponseException(
+        HttpStatusCode statusCode,
+        string? message,
+        Exception? innerException) : base(message, innerException)
     {
         this.StatusCode = statusCode;
     }

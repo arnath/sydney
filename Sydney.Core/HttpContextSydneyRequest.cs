@@ -12,10 +12,14 @@ internal class HttpContextSydneyRequest : SydneyRequest
 {
     private readonly HttpRequest httpRequest;
 
-    internal HttpContextSydneyRequest(HttpRequest httpRequest, IDictionary<string, string> pathParameters)
+    internal HttpContextSydneyRequest(
+        HttpRequest httpRequest,
+        IDictionary<string, string> pathParameters)
     {
-        this.httpRequest = httpRequest ?? throw new ArgumentNullException(nameof(httpRequest));
-        this.PathParameters = pathParameters ?? throw new ArgumentNullException(nameof(pathParameters));
+        this.httpRequest =
+            httpRequest ?? throw new ArgumentNullException(nameof(httpRequest));
+        this.PathParameters =
+            pathParameters ?? throw new ArgumentNullException(nameof(pathParameters));
 
         if (!Enum.TryParse(httpRequest.Method, true, out HttpMethod httpMethod))
         {

@@ -3,6 +3,15 @@
 using System;
 using System.Threading.Tasks;
 
+/// <summary>
+/// Base class for a standard REST based handler. Provides handler hooks for
+/// the standard REST HTTP methods: GET, POST, DELETE, PUT, HEAD, PATCH, and OPTIONS.
+///
+/// It's recommended that you use <see cref="ResourceHandlerBase"/> instead of this
+/// because it forces you to use better semantics when creating your API. Also, if
+/// you use this class, the collection URL and individual item URL need to be registered
+/// as separate handlers.
+/// </summary>
 public abstract class RestHandlerBase
 {
     /// <summary>
@@ -44,47 +53,54 @@ public abstract class RestHandlerBase
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> GetAsync(SydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> GetAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
 
     /// <summary>
     /// Handles a POST request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> PostAsync(SydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> PostAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
 
     /// <summary>
     /// Handles a DELETE request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
 
     /// <summary>
     /// Handles a PUT request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> PutAsync(SydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> PutAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
 
     /// <summary>
     /// Handles a HEAD request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> HeadAsync(SydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> HeadAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
 
     /// <summary>
     /// Handles a PATCH request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> PatchAsync(SydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> PatchAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
 
     /// <summary>
     /// Handles an OPTIONS request.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A response with optional payload.</returns>
-    public virtual Task<SydneyResponse> OptionsAsync(SydneyRequest request) => throw new NotImplementedException();
+    public virtual Task<SydneyResponse> OptionsAsync(SydneyRequest request) =>
+        throw new NotImplementedException();
 }
