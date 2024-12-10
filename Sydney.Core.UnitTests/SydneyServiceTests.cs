@@ -11,16 +11,18 @@ public class SydneyServiceTests
     [Fact]
     public void SydneyServiceConstructorThrowsExceptionIfConfigIsNull()
     {
-        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
-            () => new SydneyService(null, NullLoggerFactory.Instance));
+        ArgumentNullException exception =
+            Assert.Throws<ArgumentNullException>(
+                () => new SydneyService(null, NullLoggerFactory.Instance));
         Assert.Equal("config", exception.ParamName);
     }
 
     [Fact]
     public void SydneyServiceConstructorThrowsExceptionIfLoggerFactoryIsNull()
     {
-        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
-            () => new SydneyService(SydneyServiceConfig.CreateHttp(), null));
+        ArgumentNullException exception =
+            Assert.Throws<ArgumentNullException>(
+                () => new SydneyService(SydneyServiceConfig.CreateHttp(), null));
         Assert.Equal("loggerFactory", exception.ParamName);
     }
 
@@ -45,7 +47,8 @@ public class SydneyServiceTests
 
         // Don't await start because it never returns.
         _ = service.StartAsync();
-        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(service.StartAsync);
+        InvalidOperationException exception =
+            await Assert.ThrowsAsync<InvalidOperationException>(service.StartAsync);
         await service.StopAsync();
 
         Assert.Equal(
@@ -60,7 +63,8 @@ public class SydneyServiceTests
             SydneyServiceConfig.CreateHttp(),
             NullLoggerFactory.Instance);
 
-        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(service.StopAsync);
+        InvalidOperationException exception =
+            await Assert.ThrowsAsync<InvalidOperationException>(service.StopAsync);
         Assert.Equal(
             "Cannot stop the service when it has not been started.",
             exception.Message);
@@ -86,7 +90,9 @@ public class SydneyServiceTests
             SydneyServiceConfig.CreateHttp(),
             NullLoggerFactory.Instance);
 
-        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() => service.AddRestHandler("/foo/bar", null));
+        ArgumentNullException exception =
+            Assert.Throws<ArgumentNullException>(
+                () => service.AddRestHandler("/foo/bar", null));
         Assert.Equal("handler", exception.ParamName);
     }
 

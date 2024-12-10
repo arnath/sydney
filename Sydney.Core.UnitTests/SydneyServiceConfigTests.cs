@@ -12,7 +12,7 @@ public class SydneyServiceConfigTests
     {
         SydneyServiceConfig config = new SydneyServiceConfig(false, 0);
 
-        ArgumentException exception = Assert.Throws<ArgumentException>(() => config.Validate());
+        ArgumentException exception = Assert.Throws<ArgumentException>(config.Validate);
         Assert.Equal(
             "SydneyServiceConfig.Port must be a valid port value between 1 and 65535.",
             exception.Message);
@@ -23,7 +23,7 @@ public class SydneyServiceConfigTests
     {
         SydneyServiceConfig config = new SydneyServiceConfig(true, 443);
 
-        ArgumentException exception = Assert.Throws<ArgumentException>(() => config.Validate());
+        ArgumentException exception = Assert.Throws<ArgumentException>(config.Validate);
         Assert.Equal(
             "SydneyServiceConfig.HttpsServerCertificate must be specified when UseHttps is true.",
             exception.Message);
@@ -34,7 +34,7 @@ public class SydneyServiceConfigTests
     {
         SydneyServiceConfig config = new SydneyServiceConfig(false, 443);
 
-        ArgumentException exception = Assert.Throws<ArgumentException>(() => config.Validate());
+        ArgumentException exception = Assert.Throws<ArgumentException>(config.Validate);
         Assert.Equal(
             "Cannot use port 443 while SydneyServiceConfig.UseHttps is false.",
             exception.Message);
@@ -43,9 +43,13 @@ public class SydneyServiceConfigTests
     [Fact]
     public void ValidateThrowsExceptionForPort80WithHttps()
     {
-        SydneyServiceConfig config = new SydneyServiceConfig(true, 80, A.Fake<X509Certificate2>());
+        SydneyServiceConfig config =
+            new SydneyServiceConfig(
+                true,
+                80,
+                A.Fake<X509Certificate2>());
 
-        ArgumentException exception = Assert.Throws<ArgumentException>(() => config.Validate());
+        ArgumentException exception = Assert.Throws<ArgumentException>(config.Validate);
         Assert.Equal(
             "Cannot use port 80 while SydneyServiceConfig.UseHttps is true.",
             exception.Message);
@@ -54,7 +58,11 @@ public class SydneyServiceConfigTests
     [Fact]
     public void ValidateDoesNotThrowExceptionForValidHttpsConfig()
     {
-        SydneyServiceConfig config = SydneyServiceConfig.CreateHttps(A.Fake<X509Certificate2>(), 123, true);
+        SydneyServiceConfig config =
+            SydneyServiceConfig.CreateHttps(
+                A.Fake<X509Certificate2>(),
+                123,
+                true);
 
         // Call should not throw exceptions.
         config.Validate();

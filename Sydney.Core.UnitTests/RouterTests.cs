@@ -93,6 +93,7 @@ public class RouterTests
     public void AddRouteCannotAddDuplicateRoute()
     {
         this.router.AddRoute("/users/{id}/profile", this.handler);
+
         ArgumentException exception =
             Assert.Throws<ArgumentException>(
                 () => this.router.AddRoute("/users/{userid}/profile", this.handler));
@@ -105,6 +106,7 @@ public class RouterTests
     public void MatchRouteDoesNotMatchSubPath()
     {
         this.router.AddRoute("/three/level/path", this.handler);
+
         Assert.False(this.router.TryMatchRoute("/three/level/path/plusone", out _));
     }
 
@@ -112,6 +114,7 @@ public class RouterTests
     public void MatchRouteMatchesExactPath()
     {
         this.router.AddRoute("/three/level/path", this.handler);
+
         Assert.True(this.router.TryMatchRoute("/three/level/path", out RouteMatch match));
         Assert.Equal(this.handler, match.Handler);
         Assert.Empty(match.PathParameters);
@@ -139,6 +142,7 @@ public class RouterTests
     public void MatchRouteTrimsLeadingAndTrailingSlashes()
     {
         this.router.AddRoute("/three/level/path", this.handler);
+
         Assert.True(
             this.router.TryMatchRoute(
                 "/////three/level/path///////",

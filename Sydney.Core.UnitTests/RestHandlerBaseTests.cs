@@ -19,7 +19,7 @@ public class RestHandlerBaseTests
     public async Task HttpMethodMapsToCorrectHandlerMethodAsync(HttpMethod httpMethod, string handlerMethodName)
     {
         // We use fakes to avoid defining dummy concrete classes.
-        ISydneyRequest request = A.Fake<ISydneyRequest>();
+        SydneyRequest request = A.Fake<SydneyRequest>();
         A.CallTo(() => request.HttpMethod).Returns(httpMethod);
 
         RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
@@ -39,7 +39,7 @@ public class RestHandlerBaseTests
     [Fact]
     public async Task UnsupportedHttpMethodThrowsNotImplementedException()
     {
-        ISydneyRequest request = A.Fake<ISydneyRequest>();
+        SydneyRequest request = A.Fake<SydneyRequest>();
         A.CallTo(() => request.HttpMethod).Returns(HttpMethod.Get);
 
         RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
