@@ -1,24 +1,42 @@
-﻿namespace Sydney.Core;
+﻿using System.Net;
 
-using System;
-using System.Threading.Tasks;
+namespace Sydney.Core.Handlers;
 
 /// <summary>
 /// Base class for a resource based handler as defined in Google's API Design Guide
 /// (https://cloud.google.com/apis/design/resources). Provides handler hooks for
 /// the standard operations: List, Get, Create, Update, and Delete.
 /// </summary>
-public abstract class ResourceHandlerBase
+public abstract class ResourceHandlerBase : SydneyHandlerBase
 {
-    public ResourceHandlerBase()
+    public sealed override Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
     {
-        this.CollectionHandler = new CollectionHandlerImpl(this);
-        this.ResourceHandler = new ResourceHandlerImpl(this);
+        switch (request.HttpMethod)
+        {
+            case HttpMethod.Get:
+                // To differentiate between Get and List requests, check whether the last path
+                // segment is a parameter value.
+                string lastSegment = request.PathSegments[request.PathSegments.Count - 1];
+                if (request.PathParameters.Values.Any((param) => param == lastSegment))
+                {
+                    return this.GetAsync(request);
+                }
+
+                return this.ListAsync(request);
+
+            case HttpMethod.Post:
+                return this.CreateAsync(request);
+
+            case HttpMethod.Delete:
+                return this.DeleteAsync(request);
+
+            case HttpMethod.Put:
+            case HttpMethod.Patch:
+                return this.UpdateAsync(request);
+        }
+
+        throw new HttpResponseException(HttpStatusCode.MethodNotAllowed);
     }
-
-    internal RestHandlerBase CollectionHandler { get; }
-
-    internal RestHandlerBase ResourceHandler { get; }
 
     /// <summary>
     /// Handles a List request.
@@ -59,43 +77,5 @@ public abstract class ResourceHandlerBase
     /// <returns>A response with optional payload.</returns>
     public virtual Task<SydneyResponse> DeleteAsync(SydneyRequest request)
         => throw new NotImplementedException();
-
-    private class ResourceHandlerImpl : RestHandlerBase
-    {
-        private readonly ResourceHandlerBase parent;
-
-        public ResourceHandlerImpl(ResourceHandlerBase parent)
-        {
-            this.parent = parent;
-        }
-
-        public override Task<SydneyResponse> GetAsync(SydneyRequest request)
-            => this.parent.GetAsync(request);
-
-        public override Task<SydneyResponse> PutAsync(SydneyRequest request)
-            => this.parent.UpdateAsync(request);
-
-        public override Task<SydneyResponse> PatchAsync(SydneyRequest request)
-            => this.parent.UpdateAsync(request);
-
-        public override Task<SydneyResponse> DeleteAsync(SydneyRequest request)
-            => this.parent.DeleteAsync(request);
-    }
-
-    private class CollectionHandlerImpl : RestHandlerBase
-    {
-        private readonly ResourceHandlerBase parent;
-
-        public CollectionHandlerImpl(ResourceHandlerBase parent)
-        {
-            this.parent = parent;
-        }
-
-        public override Task<SydneyResponse> GetAsync(SydneyRequest request)
-            => this.parent.ListAsync(request);
-
-        public override Task<SydneyResponse> PostAsync(SydneyRequest request)
-            => this.parent.CreateAsync(request);
-    }
 }
 

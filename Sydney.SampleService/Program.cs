@@ -8,31 +8,37 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Serilog;
 using Sydney.Core;
+using Sydney.Core.Handlers;
+using Sydney.Core.Routing;
 
 public class Program
 {
     public static async Task Main()
     {
-        ILoggerFactory loggerFactory =
-            LoggerFactory.Create(
-                (builder) => builder.AddConsole().AddSerilog());
-        SydneyServiceConfig config =
-            SydneyServiceConfig.CreateHttp(
-                8080,
-                returnExceptionMessagesInResponse: true,
-                new AuthMiddleware());
-        using (SydneyService service = new SydneyService(loggerFactory, config))
-        {
-            // Routes can have path parameters by enclosing a name in braces.
-            service.AddRestHandler("/books/{id}", new BooksHandler());
+        Router router = new Router();
+        router.AddRoute("/", new BooksHandler());
+        Console.WriteLine(router.TryMatchRoute("/", out RouteMatch match));
+        // ILoggerFactory loggerFactory =
+        //     LoggerFactory.Create(
+        //         (builder) => builder.AddConsole().AddSerilog());
+        // SydneyServiceConfig config =
+        //     SydneyServiceConfig.CreateHttp(
+        //         8080,
+        //         returnExceptionMessagesInResponse: true,
+        //         new AuthMiddleware());
+        // using (SydneyService service = new SydneyService(loggerFactory, config))
+        // {
+        //     service.AddRestHandler("/", new BooksHandler());
+        //     // // Routes can have path parameters by enclosing a name in braces.
+        //     // service.AddRestHandler("/books/{id}", new BooksHandler());
 
-            // Resource handlers register both the collection and individual resource URLs.
-            // In this case, it registers /posts and /posts/{id}.
-            service.AddResourceHandler("/posts", new PostsHandler());
+        //     // // Resource handlers register both the collection and individual resource URLs.
+        //     // // In this case, it registers /posts and /posts/{id}.
+        //     // service.AddResourceHandler("/posts", new PostsHandler());
 
-            // Blocks until Ctrl+C or SIGBREAK is received.
-            await service.StartAsync();
-        }
+        //     // // Blocks until Ctrl+C or SIGBREAK is received.
+        //     // await service.StartAsync();
+        // }
     }
 
     // Middleware can be added to the service to perform pre and post handler processing.

@@ -28,6 +28,9 @@ internal class HttpContextSydneyRequest : SydneyRequest
                 nameof(httpRequest));
         }
 
+        this.Path = httpRequest.Path.ToString().Trim('/');
+        this.PathSegments = this.Path.Split('/');
+
         this.HttpMethod = httpMethod;
     }
 
@@ -47,7 +50,10 @@ internal class HttpContextSydneyRequest : SydneyRequest
 
     public override long ContentLength => this.httpRequest.ContentLength.GetValueOrDefault();
 
-    public override string Path => this.httpRequest.Path;
-
     public override Stream PayloadStream => this.httpRequest.Body;
+
+    public override string Path { get; }
+
+    public override IList<string> PathSegments { get; }
+
 }

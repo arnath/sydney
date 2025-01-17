@@ -14,6 +14,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>Sydney REST Framework</Description>
     <OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Sydney.Core</RootNamespace>
   </PropertyGroup>

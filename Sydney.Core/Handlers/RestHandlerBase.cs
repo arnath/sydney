@@ -1,7 +1,6 @@
-﻿namespace Sydney.Core;
+﻿using System.Net;
 
-using System;
-using System.Threading.Tasks;
+namespace Sydney.Core.Handlers;
 
 /// <summary>
 /// Base class for a standard REST based handler. Provides handler hooks for
@@ -12,14 +11,14 @@ using System.Threading.Tasks;
 /// you use this class, the collection URL and individual item URL need to be registered
 /// as separate handlers.
 /// </summary>
-public abstract class RestHandlerBase
+public abstract class RestHandlerBase : SydneyHandlerBase
 {
     /// <summary>
-    /// Handles the request asynchronously based on the HTTP method.
+    /// Handles a REST request asynchronously based on the HTTP method.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A task that represents the asynchronous operation, with the response.</returns>
-    internal virtual Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
+    public sealed override Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
     {
         switch (request.HttpMethod)
         {
@@ -45,7 +44,7 @@ public abstract class RestHandlerBase
                 return this.OptionsAsync(request);
         }
 
-        throw new NotImplementedException();
+        throw new HttpResponseException(HttpStatusCode.MethodNotAllowed);
     }
 
     /// <summary>
