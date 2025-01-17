@@ -53,24 +53,18 @@ internal class Router
                 }
 
                 parameterNames.Add(parameterName);
-                if (node.Parameter != null)
+                if (node.Parameter == null)
                 {
-                    if (parameterName != node.Parameter.Value.Key)
-                    {
-                        throw new InvalidOperationException(
-                            $"The parameter {parameterName} is attempting to rename an already existing parameter.");
-                    }
+                    node.Parameter = new PathNode(PathNodeType.Parameter, parameterName, node);
+                }
+                else if (parameterName != node.Parameter.Value)
+                {
 
-                    node = node.Parameter.Value.Value;
+                    throw new InvalidOperationException(
+                        $"The parameter {parameterName} is attempting to rename an already existing parameter.");
                 }
-                else
-                {
-                    PathNode child = new PathNode(PathNodeType.Parameter, parameterName, node);
-                    node.Parameter = new KeyValuePair<string, PathNode>(
-                        parameterName,
-                        child);
-                    node = child;
-                }
+
+                node = node.Parameter;
             }
             else
             {
@@ -147,9 +141,9 @@ internal class Router
 
         if (node.Parameter != null)
         {
-            pathParametersSoFar.Add(node.Value, segment);
+            pathParametersSoFar.Add(node.Parameter.Value, segment);
             MatchPathRecursive(
-                node.Parameter.Value.Value,
+                node.Parameter,
                 segments,
                 index + 1,
                 pathParametersSoFar,

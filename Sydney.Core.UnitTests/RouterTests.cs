@@ -82,7 +82,7 @@ public class RouterTests
         this.router.AddHandler("/", this.handler);
 
         PathNode root = GetRouteGraphRoot(this.router);
-        Assert.True(root.Children.TryGetValue(string.Empty, out PathNode emptyRouteNode));
+        Assert.True(root.Children.TryGetValue(string.Empty, out PathNode? emptyRouteNode));
         Assert.Equal(string.Empty, emptyRouteNode.Value);
         Assert.Equal(this.handler, emptyRouteNode.Handler);
     }
@@ -93,7 +93,7 @@ public class RouterTests
         this.router.AddHandler("///users///", this.handler);
 
         PathNode root = GetRouteGraphRoot(this.router);
-        Assert.True(root.Children.TryGetValue("users", out PathNode usersNode));
+        Assert.True(root.Children.TryGetValue("users", out PathNode? usersNode));
         Assert.Equal("users", usersNode.Value);
         Assert.Equal(this.handler, usersNode.Handler);
     }
@@ -106,7 +106,7 @@ public class RouterTests
 
         PathNode root = GetRouteGraphRoot(this.router);
         Assert.NotNull(root.Children["users"].Children["foo"].Children["books"].Children["bar"].Children["pew"].Handler);
-        Assert.NotNull(root.Children["users"].Parameter.Value.Value.Children["books"].Parameter.Value.Value.Handler);
+        Assert.NotNull(root.Children["users"].Parameter?.Children["books"].Parameter?.Handler);
     }
 
     [Fact]
@@ -114,14 +114,14 @@ public class RouterTests
     {
         this.router.AddHandler("/users/{userId}/books/{bookId}", this.handler);
 
-        PathNode node = GetRouteGraphRoot(this.router);
+        PathNode? node = GetRouteGraphRoot(this.router);
         Assert.True(node.Children.TryGetValue("users", out node));
 
         Assert.Equal("users", node.Value);
         Assert.Equal(PathNodeType.Segment, node.Type);
-        Assert.True(node.Parameter.HasValue);
-        Assert.Equal("userId", node.Parameter.Value.Key);
-        node = node.Parameter.Value.Value;
+        Assert.NotNull(node.Parameter);
+        Assert.Equal("userId", node.Parameter.Value);
+        node = node.Parameter;
 
         Assert.Equal("userId", node.Value);
         Assert.Equal(PathNodeType.Parameter, node.Type);
@@ -129,9 +129,9 @@ public class RouterTests
 
         Assert.Equal("books", node.Value);
         Assert.Equal(PathNodeType.Segment, node.Type);
-        Assert.True(node.Parameter.HasValue);
-        Assert.Equal("bookId", node.Parameter.Value.Key);
-        node = node.Parameter.Value.Value;
+        Assert.NotNull(node.Parameter);
+        Assert.Equal("bookId", node.Parameter.Value);
+        node = node.Parameter;
 
         Assert.Equal("bookId", node.Value);
         Assert.Equal(PathNodeType.Parameter, node.Type);
@@ -146,7 +146,7 @@ public class RouterTests
         Assert.True(
             this.router.TryMatchPath(
                 "/////three/level/path///////",
-                out MatchResult match));
+                out MatchResult? match));
         Assert.Equal(this.handler, match.Handler);
         Assert.Empty(match.PathParameters);
     }
@@ -156,9 +156,17 @@ public class RouterTests
     {
         this.router.AddHandler("/three/level/path", this.handler);
 
-        Assert.True(this.router.TryMatchPath("/three/level/path", out MatchResult matchResult));
+        Assert.True(this.router.TryMatchPath("/three/level/path", out MatchResult? matchResult));
         Assert.Equal(this.handler, matchResult.Handler);
         Assert.Empty(matchResult.PathParameters);
+    }
+
+    [Fact]
+    public void TryMatchPathDoesNotMatchPatchOfSameLength()
+    {
+        this.router.AddHandler("/three/level/path", this.handler);
+
+        Assert.False(this.router.TryMatchPath("/three/level/different", out _));
     }
 
     [Fact]
@@ -174,7 +182,7 @@ public class RouterTests
     {
         this.router.AddHandler("/this/{noun}/is/{adj}", this.handler);
 
-        Assert.True(this.router.TryMatchPath("/this/guy/is/wack", out MatchResult match));
+        Assert.True(this.router.TryMatchPath("/this/guy/is/wack", out MatchResult? match));
         Assert.Equal(this.handler, match.Handler);
         Assert.Equal(2, match.PathParameters.Count);
         Assert.Equal("guy", match.PathParameters["noun"]);
@@ -193,7 +201,7 @@ public class RouterTests
         this.router.AddHandler("/this/{noun}/is/{adj}", this.handler);
         this.router.AddHandler("/this/dog/is/cute", this.handler);
 
-        Assert.True(this.router.TryMatchPath("/this/dog/is/cute", out MatchResult match));
+        Assert.True(this.router.TryMatchPath("/this/dog/is/cute", out MatchResult? match));
         Assert.Equal(this.handler, match.Handler);
         Assert.Empty(match.PathParameters);
     }
@@ -203,12 +211,12 @@ public class RouterTests
     /// </summary>
     private static PathNode GetRouteGraphRoot(Router router)
     {
-        FieldInfo fieldInfo =
+        FieldInfo? fieldInfo =
             router.GetType().GetField(
                 "root",
                 BindingFlags.NonPublic | BindingFlags.Instance);
-        PathNode node = fieldInfo.GetValue(router) as PathNode;
+        PathNode? node = fieldInfo?.GetValue(router) as PathNode;
 
-        return node;
+        return node!;
     }
 }

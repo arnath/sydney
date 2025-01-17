@@ -18,7 +18,7 @@ internal class PathNode
     public string Value { get; }
     public PathNode? Parent { get; }
 
-    public KeyValuePair<string, PathNode>? Parameter { get; set; }
+    public PathNode? Parameter { get; set; }
     public Dictionary<string, PathNode> Children { get; set; }
     public SydneyHandlerBase? Handler { get; set; }
 }
