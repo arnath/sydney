@@ -1,7 +1,6 @@
 using System.Net;
 using FakeItEasy;
 using Sydney.Core.Handlers;
-using Sydney.Core.UnitTests.Fakes;
 using Xunit;
 
 namespace Sydney.Core.UnitTests.Handlers;
@@ -20,13 +19,17 @@ public class ResourceHandlerBaseTests
         string path,
         string handlerMethodName)
     {
-        SydneyRequest request = A.Fake<SydneyRequest>();
-        A.CallTo(() => request.HttpMethod).Returns(httpMethod);
-        A.CallTo(() => request.Path).Returns(path);
-        A.CallTo(() => request.PathSegments).Returns(path.Trim('/').Split('/'));
+        SydneyRequest request = new FakeSydneyRequest(httpMethod, path);
+        if (request.PathSegments.Count == 2)
+        {
+            request.PathParameters.Add("id", request.PathSegments[1]);
+        }
 
-        FakeResourceHandler handler = new FakeResourceHandler(
-            () => Task.FromResult(new SydneyResponse(HttpStatusCode.Ambiguous)));
+        ResourceHandlerBase handler = A.Fake<ResourceHandlerBase>(options => options.CallsBaseMethods());
+        A.CallTo(handler)
+            .Where(call => call.Method.Name == handlerMethodName)
+            .WithReturnType<Task<SydneyResponse>>()
+            .Returns(Task.FromResult(new SydneyResponse(HttpStatusCode.Ambiguous)));
 
         SydneyResponse response = await handler.HandleRequestAsync(request);
 
@@ -37,16 +40,25 @@ public class ResourceHandlerBaseTests
     }
 
     [Fact]
-    public async Task UnsupportedHttpMethodThrowsHttpResponseExceptionWithMethodNotAllowed()
+    public async Task UnsupportedHttpMethodThrowsHttpResponseException()
     {
-        SydneyRequest request = A.Fake<SydneyRequest>();
-        A.CallTo(() => request.HttpMethod).Returns(HttpMethod.Get);
-
+        SydneyRequest request = new FakeSydneyRequest(HttpMethod.Options);
         ResourceHandlerBase handler = A.Fake<ResourceHandlerBase>(options => options.CallsBaseMethods());
 
         HttpResponseException exception =
             await Assert.ThrowsAsync<HttpResponseException>(
                 () => handler.HandleRequestAsync(request));
+
         Assert.Equal(HttpStatusCode.MethodNotAllowed, exception.StatusCode);
+    }
+
+    [Fact]
+    public async Task UnimplementedHandlerMethodThrowsNotImplementedException()
+    {
+        SydneyRequest request = new FakeSydneyRequest();
+        ResourceHandlerBase handler = A.Fake<ResourceHandlerBase>(options => options.CallsBaseMethods());
+
+        await Assert.ThrowsAsync<NotImplementedException>(
+            () => handler.HandleRequestAsync(request));
     }
 }
