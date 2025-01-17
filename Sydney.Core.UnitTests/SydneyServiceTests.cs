@@ -9,7 +9,7 @@ public class SydneyServiceTests
 {
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
     [Fact]
-    public void SydneyServiceConstructorThrowsExceptionIfLoggerFactoryIsNull()
+    public void ConstructorThrowsExceptionIfLoggerFactoryIsNull()
     {
         ArgumentNullException exception =
             Assert.Throws<ArgumentNullException>(
@@ -18,7 +18,7 @@ public class SydneyServiceTests
     }
 
     [Fact]
-    public void SydneyServiceConstructorThrowsExceptionIfConfigIsNull()
+    public void ConstructorThrowsExceptionIfConfigIsNull()
     {
         ArgumentNullException exception =
             Assert.Throws<ArgumentNullException>(
@@ -28,7 +28,7 @@ public class SydneyServiceTests
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
     [Fact]
-    public void SydneyServiceConstructorCallsValidateOnConfig()
+    public void ConstructorCallsValidateOnConfig()
     {
         SydneyServiceConfig config = A.Fake<SydneyServiceConfig>();
         config.UseHttps = false;
@@ -86,7 +86,7 @@ public class SydneyServiceTests
     }
 
     [Fact]
-    public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
+    public void AddHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
     {
         SydneyService service = new SydneyService(
             NullLoggerFactory.Instance,
@@ -100,7 +100,7 @@ public class SydneyServiceTests
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
     [Fact]
-    public async Task AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
+    public async Task AddHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
     {
         RestHandlerBase handler = A.Fake<RestHandlerBase>();
         SydneyService service = new SydneyService(
