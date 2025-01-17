@@ -7,7 +7,7 @@ namespace Sydney.Core.Handlers;
 /// (https://cloud.google.com/apis/design/resources). Provides handler hooks for
 /// the standard operations: List, Get, Create, Update, and Delete.
 /// </summary>
-public abstract class ResourceHandlerBase : SydneyHandlerBase
+public abstract class SydneyResourceHandlerBase : SydneyHandlerBase
 {
     public sealed override Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
     {

@@ -18,7 +18,7 @@ public class RestHandlerBaseTests
     public async Task HttpMethodMapsToCorrectHandlerMethodAsync(HttpMethod httpMethod, string handlerMethodName)
     {
         SydneyRequest request = new FakeSydneyRequest(httpMethod);
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler)
             .Where(call => call.Method.Name == handlerMethodName)
             .WithReturnType<Task<SydneyResponse>>()
@@ -36,7 +36,7 @@ public class RestHandlerBaseTests
     public async Task UnimplementedHandlerMethodThrowsNotImplementedException()
     {
         SydneyRequest request = new FakeSydneyRequest();
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
 
         await Assert.ThrowsAsync<NotImplementedException>(
             () => handler.HandleRequestAsync(request));

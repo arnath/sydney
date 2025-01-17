@@ -1,10 +1,10 @@
-namespace Sydney.Core.Handlers;
+﻿namespace Sydney.Core.Handlers;
 
 /// <summary>
 /// Base class for a request handler.
 ///
-/// This class primarily exists to provide a common base class. Use <see cref="RestHandlerBase"/>
-/// or <see cref="ResourceHandlerBase"/> to create REST or resource based handlers instead of
+/// This class primarily exists to provide a common base class. Use <see cref="SydneyRestHandlerBase"/>
+/// or <see cref="SydneyResourceHandlerBase"/> to create REST or resource based handlers instead of
 /// extending this class directly.
 /// </summary>
 public abstract class SydneyHandlerBase

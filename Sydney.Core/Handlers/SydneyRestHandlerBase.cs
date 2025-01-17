@@ -6,12 +6,12 @@ namespace Sydney.Core.Handlers;
 /// Base class for a standard REST based handler. Provides handler hooks for
 /// the standard REST HTTP methods: GET, POST, DELETE, PUT, HEAD, PATCH, and OPTIONS.
 ///
-/// It's recommended that you use <see cref="ResourceHandlerBase"/> instead of this
+/// It's recommended that you use <see cref="SydneyResourceHandlerBase"/> instead of this
 /// because it forces you to use better semantics when creating your API. Also, if
 /// you use this class, the collection URL and individual item URL need to be registered
 /// as separate handlers.
 /// </summary>
-public abstract class RestHandlerBase : SydneyHandlerBase
+public abstract class SydneyRestHandlerBase : SydneyHandlerBase
 {
     /// <summary>
     /// Handles a REST request asynchronously based on the HTTP method.

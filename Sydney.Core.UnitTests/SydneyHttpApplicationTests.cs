@@ -91,7 +91,7 @@ public class SydneyHttpApplicationTests
         context.Request.Path = new PathString("/foo/bar");
 
         // All the unimplemented methods throw NotImplementedException.
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
 
         Router router = new Router();
         router.AddHandler("/foo/bar", handler);
@@ -115,7 +115,7 @@ public class SydneyHttpApplicationTests
         context.Request.Method = "GET";
         context.Request.Path = new PathString("/foo/bar");
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler).Where(call => call.Method.Name == "GetAsync").Throws(new Exception());
 
         Router router = new Router();
@@ -140,7 +140,7 @@ public class SydneyHttpApplicationTests
         context.Request.Method = "GET";
         context.Request.Path = new PathString("/foo/bar");
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler)
             .Where(call => call.Method.Name == "GetAsync")
             .Throws(new HttpResponseException(HttpStatusCode.EarlyHints));
@@ -169,7 +169,7 @@ public class SydneyHttpApplicationTests
         context.Response.Body = new MemoryStream();
 
         string message = "here is a message";
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler)
             .Where(call => call.Method.Name == "GetAsync")
             .Throws(new Exception(message));
@@ -246,7 +246,7 @@ public class SydneyHttpApplicationTests
         context.Request.Method = "GET";
         context.Request.Path = new PathString("/foo/bar");
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
 
         SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
         A.CallTo(() => middleware.PreHandlerHookAsync(A<SydneyRequest>.Ignored))

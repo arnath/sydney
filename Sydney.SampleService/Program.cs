@@ -81,7 +81,7 @@ public class Program
 
     // A resource handler inherits from ResourceHandlerBase and supports the 5 standard
     // operations as defined in Google's API Guidelines.
-    private class PostsHandler : ResourceHandlerBase
+    private class PostsHandler : SydneyResourceHandlerBase
     {
         private readonly List<dynamic> posts = new();
 
@@ -132,7 +132,7 @@ public class Program
     // A rest handler inherits from RestHandlerBase and supports all the standard
     // HTTP methods. Other than this, the mechanisms are identical to a resource
     // handler.
-    private class BooksHandler : RestHandlerBase
+    private class BooksHandler : SydneyRestHandlerBase
     {
         private readonly List<dynamic> books = new();
 

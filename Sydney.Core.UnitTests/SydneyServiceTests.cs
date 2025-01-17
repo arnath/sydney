@@ -102,7 +102,7 @@ public class SydneyServiceTests
     [Fact]
     public async Task AddHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
     {
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>();
         SydneyService service = new SydneyService(
             NullLoggerFactory.Instance,
             SydneyServiceConfig.CreateHttp());

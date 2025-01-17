@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using FakeItEasy;
 using Sydney.Core.Handlers;
 using Xunit;
@@ -25,7 +25,7 @@ public class ResourceHandlerBaseTests
             request.PathParameters.Add("id", request.PathSegments[1]);
         }
 
-        ResourceHandlerBase handler = A.Fake<ResourceHandlerBase>(options => options.CallsBaseMethods());
+        SydneyResourceHandlerBase handler = A.Fake<SydneyResourceHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler)
             .Where(call => call.Method.Name == handlerMethodName)
             .WithReturnType<Task<SydneyResponse>>()
@@ -43,7 +43,7 @@ public class ResourceHandlerBaseTests
     public async Task UnsupportedHttpMethodThrowsHttpResponseException()
     {
         SydneyRequest request = new FakeSydneyRequest(HttpMethod.Options);
-        ResourceHandlerBase handler = A.Fake<ResourceHandlerBase>(options => options.CallsBaseMethods());
+        SydneyResourceHandlerBase handler = A.Fake<SydneyResourceHandlerBase>(options => options.CallsBaseMethods());
 
         HttpResponseException exception =
             await Assert.ThrowsAsync<HttpResponseException>(
@@ -56,7 +56,7 @@ public class ResourceHandlerBaseTests
     public async Task UnimplementedHandlerMethodThrowsNotImplementedException()
     {
         SydneyRequest request = new FakeSydneyRequest();
-        ResourceHandlerBase handler = A.Fake<ResourceHandlerBase>(options => options.CallsBaseMethods());
+        SydneyResourceHandlerBase handler = A.Fake<SydneyResourceHandlerBase>(options => options.CallsBaseMethods());
 
         await Assert.ThrowsAsync<NotImplementedException>(
             () => handler.HandleRequestAsync(request));
