@@ -1,9 +1,10 @@
 ﻿using System.Net;
 using FakeItEasy;
 using Sydney.Core.Handlers;
+using Sydney.Core.UnitTests.Fakes;
 using Xunit;
 
-namespace Sydney.Core.UnitTests;
+namespace Sydney.Core.UnitTests.Handlers;
 
 public class RestHandlerBaseTests
 {
@@ -15,17 +16,13 @@ public class RestHandlerBaseTests
     [InlineData(HttpMethod.Head, "HeadAsync")]
     [InlineData(HttpMethod.Patch, "PatchAsync")]
     [InlineData(HttpMethod.Options, "OptionsAsync")]
-    public async Task HttpMethodMapsToCorrectHandlerMethodAsync(HttpMethod httpMethod, string handlerMethodName)
+    public async Task HandleRequestMapsMethodsCorrectly(HttpMethod httpMethod, string handlerMethodName)
     {
-        // We use fakes to avoid defining dummy concrete classes.
         SydneyRequest request = A.Fake<SydneyRequest>();
         A.CallTo(() => request.HttpMethod).Returns(httpMethod);
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
-        A.CallTo(handler)
-            .Where(call => call.Method.Name == handlerMethodName)
-            .WithReturnType<Task<SydneyResponse>>()
-            .Returns(Task.FromResult(new SydneyResponse(HttpStatusCode.Ambiguous)));
+        RestHandlerBase handler = new FakeRestHandler(
+            () => Task.FromResult(new SydneyResponse(HttpStatusCode.Ambiguous)));
 
         SydneyResponse response = await handler.HandleRequestAsync(request);
 
@@ -36,14 +33,16 @@ public class RestHandlerBaseTests
     }
 
     [Fact]
-    public async Task UnsupportedHttpMethodThrowsNotImplementedException()
+    public async Task UnsupportedHttpMethodThrowsHttpResponseExceptionWithMethodNotAllowed()
     {
         SydneyRequest request = A.Fake<SydneyRequest>();
         A.CallTo(() => request.HttpMethod).Returns(HttpMethod.Get);
 
         RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
 
-        _ = await Assert.ThrowsAsync<NotImplementedException>(
-            () => handler.HandleRequestAsync(request));
+        HttpResponseException exception =
+            await Assert.ThrowsAsync<HttpResponseException>(
+                () => handler.HandleRequestAsync(request));
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, exception.StatusCode);
     }
 }

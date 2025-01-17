@@ -4,7 +4,7 @@ using Sydney.Core.Handlers;
 using Sydney.Core.Routing;
 using Xunit;
 
-namespace Sydney.Core.UnitTests;
+namespace Sydney.Core.UnitTests.Routing;
 
 public class RouterTests
 {
