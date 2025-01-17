@@ -1,13 +1,12 @@
-﻿namespace Sydney.Core.UnitTests;
-
-using System;
-using System.Collections.Generic;
-using FakeItEasy;
+﻿using FakeItEasy;
 using Microsoft.AspNetCore.Http;
 using Xunit;
 
+namespace Sydney.Core.UnitTests;
+
 public class SydneyRequestTests
 {
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
     [Fact]
     public void HttpContextSydneyRequestConstructorThrowsArgumentNullExceptionWhenHttpRequestIsNull()
     {
@@ -25,12 +24,14 @@ public class SydneyRequestTests
                 () => new HttpContextSydneyRequest(A.Fake<HttpRequest>(), null));
         Assert.Equal("pathParameters", exception.ParamName);
     }
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
     [Fact]
     public void HttpContextSydneyRequestConstructorThrowsArgumentExceptionWhenRequestMethodCannotBeParsed()
     {
         HttpRequest request = A.Fake<HttpRequest>();
         request.Method = "FOO";
+        request.Path = new PathString("/books");
 
         ArgumentException exception =
             Assert.Throws<ArgumentException>(
@@ -51,6 +52,7 @@ public class SydneyRequestTests
     {
         HttpRequest request = A.Fake<HttpRequest>();
         request.Method = method;
+        request.Path = new PathString("/books");
 
         SydneyRequest sydneyRequest =
             new HttpContextSydneyRequest(
