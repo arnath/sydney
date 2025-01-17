@@ -90,6 +90,7 @@ public class SydneyHttpApplicationTests
         context.Request.Method = "GET";
         context.Request.Path = new PathString("/foo/bar");
 
+        // All the unimplemented methods throw NotImplementedException.
         RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
 
         Router router = new Router();
@@ -209,7 +210,7 @@ public class SydneyHttpApplicationTests
         dynamic payload = new { Foo = "foo", Bar = "bar" };
         SydneyResponse response = new SydneyResponse(HttpStatusCode.AlreadyReported, payload);
         response.Headers.Add(new KeyValuePair<string, string>("foo", "bar"));
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(response));
 
@@ -274,7 +275,7 @@ public class SydneyHttpApplicationTests
         context.Request.Path = new PathString("/foo/bar");
 
         SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(originalResponse));
 
@@ -305,7 +306,7 @@ public class SydneyHttpApplicationTests
         context.Request.Path = new PathString("/foo/bar");
 
         SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(originalResponse));
 
