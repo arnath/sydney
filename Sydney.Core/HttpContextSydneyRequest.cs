@@ -28,7 +28,7 @@ internal class HttpContextSydneyRequest : SydneyRequest
                 nameof(httpRequest));
         }
 
-        this.Path = httpRequest.Path.ToString().Trim('/');
+        this.Path = httpRequest.Path.Value!.Trim('/');
         this.PathSegments = this.Path.Split('/');
 
         this.HttpMethod = httpMethod;

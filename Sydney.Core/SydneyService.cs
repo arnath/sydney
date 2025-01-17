@@ -1,15 +1,11 @@
-﻿namespace Sydney.Core;
-
-using System;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
+﻿using System.Text.Json;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Sydney.Core.Handlers;
 using Sydney.Core.Routing;
+
+namespace Sydney.Core;
 
 /// <summary>
 /// Represents a Sydney service. This class is the primary entry point for interacting
@@ -93,9 +89,9 @@ public class SydneyService : IDisposable
             "Listening on {Scheme}://0.0.0.0:{Port}, press Ctrl-C to stop ...",
             config.UseHttps ? "https" : "http",
             config.Port);
-        foreach (string route in this.router.Routes)
+        foreach (string path in this.router.HandlerPaths)
         {
-            this.logger.LogInformation("Registered route: /{Route}/", route);
+            this.logger.LogInformation("Registered handler for path: /{Path}/", path);
         }
 
         // Set up Ctrl-Break and Ctrl-C handler.
@@ -136,11 +132,11 @@ public class SydneyService : IDisposable
     }
 
     /// <summary>
-    /// Adds a <see cref="RestHandlerBase"/> for the specified path.
+    /// Adds a handler for the specified path.
     /// </summary>
     /// <param name="path">The path for the handler.</param>
     /// <param name="handler">The handler to add.</param>
-    public void AddRestHandler(string path, RestHandlerBase handler)
+    public void AddHandler(string path, SydneyHandlerBase handler)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(handler);
@@ -150,32 +146,7 @@ public class SydneyService : IDisposable
             throw new InvalidOperationException("Cannot add a handler after the service has been started.");
         }
 
-        this.router.AddRoute(path, handler);
-    }
-
-    /// <summary>
-    /// Adds a <see cref="ResourceHandlerBase"/> for the specified path.
-    /// </summary>
-    /// <param name="collectionPath">The collection path for the handler.
-    /// For example, if the resource type is jobs, the path could be "/prefix/jobs". </param>
-    /// <param name="handler">The handler to add.</param>
-    public void AddResourceHandler(string collectionPath, ResourceHandlerBase handler)
-    {
-        ArgumentNullException.ThrowIfNullOrWhiteSpace(collectionPath);
-        ArgumentNullException.ThrowIfNull(handler);
-
-        if (this.runningTaskCompletionSource != null)
-        {
-            throw new InvalidOperationException("Cannot add a handler after the service has been started.");
-        }
-
-        // Trim leading and trailing slashes from the path.
-        collectionPath = collectionPath.Trim('/');
-
-        // Internally, a resource handler registers two routes: one rest handler for
-        // the collection route and one rest handler for the resource route.
-        this.router.AddRoute(collectionPath, handler.CollectionHandler);
-        this.router.AddRoute($"{collectionPath}/{{id}}", handler.ResourceHandler);
+        this.router.AddHandler(path, handler);
     }
 
     public void Dispose()

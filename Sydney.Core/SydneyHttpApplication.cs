@@ -1,15 +1,11 @@
-﻿namespace Sydney.Core;
-
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Logging;
+using Sydney.Core.Handlers;
 using Sydney.Core.Routing;
+
+namespace Sydney.Core;
 
 internal class SydneyHttpApplication : IHttpApplication<HttpContext>
 {
@@ -51,9 +47,11 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
     public async Task ProcessRequestAsync(HttpContext context)
     {
         // Try to match the incoming URL to a handler.
-        if (!this.router.TryMatchRoute(context.Request.Path.Value, out RouteMatch match))
+        if (!this.router.TryMatchPath(context.Request.Path.Value!, out MatchResult? matchResult))
         {
-            this.logger.LogWarning("No matching handler found for incoming request url: {Path}.", context.Request.Path);
+            this.logger.LogWarning(
+                "No matching handler found for incoming request url: {Path}.",
+                context.Request.Path);
 
             // If we couldn't, return a 404.
             context.Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -63,8 +61,11 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
         }
 
         // Create and handle the request.
-        HttpContextSydneyRequest request = new HttpContextSydneyRequest(context.Request, match.PathParameters);
-        SydneyResponse response = await this.HandleRequestAsync(request, match.Handler);
+        HttpContextSydneyRequest request =
+            new HttpContextSydneyRequest(
+                context.Request,
+                matchResult.PathParameters);
+        SydneyResponse response = await this.HandleRequestAsync(request, matchResult.Handler);
 
         // Write the response to context.Response.
         string jsonPayload = response.JsonSerializedPayload;
@@ -86,7 +87,9 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
         await context.Response.CompleteAsync();
     }
 
-    private async Task<SydneyResponse> HandleRequestAsync(SydneyRequest request, RestHandlerBase handler)
+    private async Task<SydneyResponse> HandleRequestAsync(
+        SydneyRequest request,
+        SydneyHandlerBase handler)
     {
         this.logger.LogInformation(
             "Request Received: path={Path}, method={Method}.",

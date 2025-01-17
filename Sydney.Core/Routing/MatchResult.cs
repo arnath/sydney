@@ -2,7 +2,7 @@ using Sydney.Core.Handlers;
 
 namespace Sydney.Core.Routing;
 
-internal struct MatchResult
+internal class MatchResult
 {
     public MatchResult(SydneyHandlerBase handler, Dictionary<string, string> pathParameters)
     {

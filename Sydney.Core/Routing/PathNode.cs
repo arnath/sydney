@@ -1,6 +1,6 @@
 using Sydney.Core.Handlers;
 
-namespace Sydney.Core.RoutingToo;
+namespace Sydney.Core.Routing;
 
 internal class PathNode
 {

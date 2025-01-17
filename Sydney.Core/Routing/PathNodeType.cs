@@ -1,4 +1,4 @@
-namespace Sydney.Core.RoutingToo;
+namespace Sydney.Core.Routing;
 
 internal enum PathNodeType
 {
