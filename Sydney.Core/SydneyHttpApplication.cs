@@ -47,7 +47,7 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
     public async Task ProcessRequestAsync(HttpContext context)
     {
         // Try to match the incoming URL to a handler.
-        if (!this.router.TryMatchPath(context.Request.Path.Value!, out MatchResult? matchResult))
+        if (!this.router.TryMatchPath(context.Request.Path.Value!, out MatchResult? match))
         {
             this.logger.LogWarning(
                 "No matching handler found for incoming request url: {Path}.",
@@ -64,8 +64,8 @@ internal class SydneyHttpApplication : IHttpApplication<HttpContext>
         HttpContextSydneyRequest request =
             new HttpContextSydneyRequest(
                 context.Request,
-                matchResult.PathParameters);
-        SydneyResponse response = await this.HandleRequestAsync(request, matchResult.Handler);
+                match.PathParameters);
+        SydneyResponse response = await this.HandleRequestAsync(request, match.Handler);
 
         // Write the response to context.Response.
         string jsonPayload = response.JsonSerializedPayload;

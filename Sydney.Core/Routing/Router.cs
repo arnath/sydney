@@ -96,10 +96,10 @@ internal class Router
 
     public bool TryMatchPath(
         string path,
-        [NotNullWhen(returnValue: true)] out MatchResult? matchResult)
+        [NotNullWhen(returnValue: true)] out MatchResult? match)
     {
         List<MatchResult> results = new List<MatchResult>();
-        matchResult = null;
+        match = null;
         string trimmedPath = TrimSlashes(path);
         string[] segments = trimmedPath.Split('/');
 
@@ -109,9 +109,9 @@ internal class Router
             0,
             new Dictionary<string, string>(),
             results);
-        matchResult = results.OrderBy((r) => r.PathParameters.Count).FirstOrDefault();
+        match = results.OrderBy((r) => r.PathParameters.Count).FirstOrDefault();
 
-        return matchResult != null;
+        return match != null;
     }
 
     private static void MatchPathRecursive(

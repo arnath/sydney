@@ -139,6 +139,19 @@ public class RouterTests
     }
 
     [Fact]
+    public void TryMatchPathTrimsLeadingAndTrailingSlashes()
+    {
+        this.router.AddHandler("/three/level/path", this.handler);
+
+        Assert.True(
+            this.router.TryMatchPath(
+                "/////three/level/path///////",
+                out MatchResult match));
+        Assert.Equal(this.handler, match.Handler);
+        Assert.Empty(match.PathParameters);
+    }
+
+    [Fact]
     public void TryMatchPathMatchesExactPath()
     {
         this.router.AddHandler("/three/level/path", this.handler);
@@ -148,47 +161,46 @@ public class RouterTests
         Assert.Empty(matchResult.PathParameters);
     }
 
-    // [Fact]
-    // public void MatchRouteDoesNotMatchSubPath()
-    // {
-    //     this.router.AddRoute("/three/level/path", this.handler);
+    [Fact]
+    public void TryMatchPathDoesNotMatchSubPath()
+    {
+        this.router.AddHandler("/three/level/path", this.handler);
 
-    //     Assert.False(this.router.TryMatchRoute("/three/level/path/plusone", out _));
-    // }
+        Assert.False(this.router.TryMatchPath("/three/level/path/plusone", out _));
+    }
 
+    [Fact]
+    public void TryMatchPathParametersMatchEverything()
+    {
+        this.router.AddHandler("/this/{noun}/is/{adj}", this.handler);
 
+        Assert.True(this.router.TryMatchPath("/this/guy/is/wack", out MatchResult match));
+        Assert.Equal(this.handler, match.Handler);
+        Assert.Equal(2, match.PathParameters.Count);
+        Assert.Equal("guy", match.PathParameters["noun"]);
+        Assert.Equal("wack", match.PathParameters["adj"]);
 
-    // [Fact]
-    // public void MatchRouteParametersMatchEverything()
-    // {
-    //     this.router.AddRoute("/this/{noun}/is/{adj}", this.handler);
+        Assert.True(this.router.TryMatchPath("/this/dog/is/cute", out match));
+        Assert.Equal(this.handler, match.Handler);
+        Assert.Equal(2, match.PathParameters.Count);
+        Assert.Equal("dog", match.PathParameters["noun"]);
+        Assert.Equal("cute", match.PathParameters["adj"]);
+    }
 
-    //     Assert.True(this.router.TryMatchRoute("/this/guy/is/wack", out RouteMatch match));
-    //     Assert.Equal(this.handler, match.Handler);
-    //     Assert.Equal(2, match.PathParameters.Count);
-    //     Assert.Equal("guy", match.PathParameters["noun"]);
-    //     Assert.Equal("wack", match.PathParameters["adj"]);
+    [Fact]
+    public void TryMatchPathPrefersMoreSpecificPath()
+    {
+        this.router.AddHandler("/this/{noun}/is/{adj}", this.handler);
+        this.router.AddHandler("/this/dog/is/cute", this.handler);
 
-    //     Assert.True(this.router.TryMatchRoute("/this/dog/is/cute", out match));
-    //     Assert.Equal(this.handler, match.Handler);
-    //     Assert.Equal(2, match.PathParameters.Count);
-    //     Assert.Equal("dog", match.PathParameters["noun"]);
-    //     Assert.Equal("cute", match.PathParameters["adj"]);
-    // }
+        Assert.True(this.router.TryMatchPath("/this/dog/is/cute", out MatchResult match));
+        Assert.Equal(this.handler, match.Handler);
+        Assert.Empty(match.PathParameters);
+    }
 
-    // [Fact]
-    // public void MatchRouteTrimsLeadingAndTrailingSlashes()
-    // {
-    //     this.router.AddRoute("/three/level/path", this.handler);
-
-    //     Assert.True(
-    //         this.router.TryMatchRoute(
-    //             "/////three/level/path///////",
-    //             out RouteMatch match));
-    //     Assert.Equal(this.handler, match.Handler);
-    //     Assert.Empty(match.PathParameters);
-    // }
-
+    /// <summary>
+    /// Helper to fetch the root of the routing graph using reflection.
+    /// </summary>
     private static PathNode GetRouteGraphRoot(Router router)
     {
         FieldInfo fieldInfo =
