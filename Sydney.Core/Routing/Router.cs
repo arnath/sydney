@@ -25,10 +25,7 @@ internal class Router
 
     public void AddHandler(string path, SydneyHandlerBase handler)
     {
-        // "books//foo/"
-        // "/"
         string trimmedPath = TrimSlashes(path);
-
         string[] segments = trimmedPath.Split('/');
         HashSet<string> parameterNames = new HashSet<string>();
         PathNode node = this.root;

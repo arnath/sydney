@@ -15,9 +15,9 @@ public class Program
 {
     public static async Task Main()
     {
-        Router router = new Router();
-        router.AddRoute("/", new BooksHandler());
-        Console.WriteLine(router.TryMatchRoute("/", out RouteMatch match));
+        // Router router = new Router();
+        // router.AddRoute("/", new BooksHandler());
+        // Console.WriteLine(router.TryMatchRoute("/", out RouteMatch match));
         // ILoggerFactory loggerFactory =
         //     LoggerFactory.Create(
         //         (builder) => builder.AddConsole().AddSerilog());

@@ -1,17 +1,14 @@
-﻿namespace Sydney.Core.UnitTests;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
 using FakeItEasy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging.Abstractions;
+using Sydney.Core.Handlers;
 using Sydney.Core.Routing;
 using Xunit;
+
+namespace Sydney.Core.UnitTests;
 
 public class SydneyHttpApplicationTests
 {
@@ -64,7 +61,7 @@ public class SydneyHttpApplicationTests
             .Returns(Task.FromResult(response));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -96,7 +93,7 @@ public class SydneyHttpApplicationTests
         RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -121,7 +118,7 @@ public class SydneyHttpApplicationTests
         A.CallTo(handler).Where(call => call.Method.Name == "GetAsync").Throws(new Exception());
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -148,7 +145,7 @@ public class SydneyHttpApplicationTests
             .Throws(new HttpResponseException(HttpStatusCode.EarlyHints));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -177,7 +174,7 @@ public class SydneyHttpApplicationTests
             .Throws(new Exception(message));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -217,7 +214,7 @@ public class SydneyHttpApplicationTests
             .Returns(Task.FromResult(response));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -255,7 +252,7 @@ public class SydneyHttpApplicationTests
             .Throws(new Exception());
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -286,7 +283,7 @@ public class SydneyHttpApplicationTests
             .Throws(new Exception());
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -318,7 +315,7 @@ public class SydneyHttpApplicationTests
             .Returns(Task.FromResult(modifiedResponse));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -350,7 +347,7 @@ public class SydneyHttpApplicationTests
             .Returns(Task.FromResult<SydneyResponse>(null));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler("/foo/bar", handler);
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(

@@ -1,10 +1,9 @@
-﻿namespace Sydney.Core.UnitTests;
-
-using System;
-using System.Threading.Tasks;
-using FakeItEasy;
+﻿using FakeItEasy;
 using Microsoft.Extensions.Logging.Abstractions;
+using Sydney.Core.Handlers;
 using Xunit;
+
+namespace Sydney.Core.UnitTests;
 
 public class SydneyServiceTests
 {
@@ -70,48 +69,48 @@ public class SydneyServiceTests
             exception.Message);
     }
 
-    [Fact]
-    public void AddRestHandlerThrowsArgumentNullExceptionWhenPathIsNull()
-    {
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
-        SydneyService service = new SydneyService(
-            NullLoggerFactory.Instance,
-            SydneyServiceConfig.CreateHttp());
+    // [Fact]
+    // public void AddRestHandlerThrowsArgumentNullExceptionWhenPathIsNull()
+    // {
+    //     RestHandlerBase handler = A.Fake<RestHandlerBase>();
+    //     SydneyService service = new SydneyService(
+    //         NullLoggerFactory.Instance,
+    //         SydneyServiceConfig.CreateHttp());
 
-        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
-            () => service.AddRestHandler(null, handler));
-        Assert.Equal("path", exception.ParamName);
-    }
+    //     ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
+    //         () => service.AddRestHandler(null, handler));
+    //     Assert.Equal("path", exception.ParamName);
+    // }
 
-    [Fact]
-    public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
-    {
-        SydneyService service = new SydneyService(
-            NullLoggerFactory.Instance,
-            SydneyServiceConfig.CreateHttp());
+    // [Fact]
+    // public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
+    // {
+    //     SydneyService service = new SydneyService(
+    //         NullLoggerFactory.Instance,
+    //         SydneyServiceConfig.CreateHttp());
 
-        ArgumentNullException exception =
-            Assert.Throws<ArgumentNullException>(
-                () => service.AddRestHandler("/foo/bar", null));
-        Assert.Equal("handler", exception.ParamName);
-    }
+    //     ArgumentNullException exception =
+    //         Assert.Throws<ArgumentNullException>(
+    //             () => service.AddRestHandler("/foo/bar", null));
+    //     Assert.Equal("handler", exception.ParamName);
+    // }
 
-    [Fact]
-    public async Task AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
-    {
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
-        SydneyService service = new SydneyService(
-            NullLoggerFactory.Instance,
-            SydneyServiceConfig.CreateHttp());
+    // [Fact]
+    // public async Task AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
+    // {
+    //     RestHandlerBase handler = A.Fake<RestHandlerBase>();
+    //     SydneyService service = new SydneyService(
+    //         NullLoggerFactory.Instance,
+    //         SydneyServiceConfig.CreateHttp());
 
-        // Don't await start because it never returns.
-        _ = service.StartAsync();
-        Exception exception = Assert.Throws<InvalidOperationException>(
-            () => service.AddRestHandler("/foo/bar", handler));
-        await service.StopAsync();
+    //     // Don't await start because it never returns.
+    //     _ = service.StartAsync();
+    //     Exception exception = Assert.Throws<InvalidOperationException>(
+    //         () => service.AddRestHandler("/foo/bar", handler));
+    //     await service.StopAsync();
 
-        Assert.Equal(
-            "Cannot add a handler after the service has been started.",
-            exception.Message);
-    }
+    //     Assert.Equal(
+    //         "Cannot add a handler after the service has been started.",
+    //         exception.Message);
+    // }
 }

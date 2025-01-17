@@ -1,10 +1,9 @@
-﻿namespace Sydney.Core.UnitTests;
-
-using System;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using FakeItEasy;
+using Sydney.Core.Handlers;
 using Xunit;
+
+namespace Sydney.Core.UnitTests;
 
 public class RestHandlerBaseTests
 {
