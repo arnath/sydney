@@ -1,10 +1,7 @@
-﻿namespace Sydney.Core.UnitTests;
-
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using FakeItEasy;
-using Microsoft.AspNetCore.Http;
+﻿using FakeItEasy;
 using Xunit;
+
+namespace Sydney.Core.UnitTests;
 
 public class SydneyMiddlewareTests
 {
@@ -22,7 +19,7 @@ public class SydneyMiddlewareTests
     public async Task PostHandlerHookReturnsNullWhenUnimplemented()
     {
         SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
-        SydneyResponse response =
+        SydneyResponse? response =
             await middleware.PostHandlerHookAsync(
                 A.Fake<SydneyRequest>(),
                 A.Fake<SydneyResponse>());

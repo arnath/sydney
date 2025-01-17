@@ -56,7 +56,7 @@ public class SydneyHttpApplicationTests
 
         SydneyResponse response = new SydneyResponse(HttpStatusCode.AlreadyReported);
         response.Headers.Add(new KeyValuePair<string, string>("foo", "bar"));
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(response));
 
@@ -311,8 +311,11 @@ public class SydneyHttpApplicationTests
 
         SydneyResponse modifiedResponse = new SydneyResponse(HttpStatusCode.ExpectationFailed);
         SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
-        A.CallTo(() => middleware.PostHandlerHookAsync(A<SydneyRequest>.Ignored, A<SydneyResponse>.Ignored))
-            .Returns(Task.FromResult(modifiedResponse));
+        A.CallTo(
+            () => middleware.PostHandlerHookAsync(
+                A<SydneyRequest>.Ignored,
+                A<SydneyResponse>.Ignored))
+            .Returns(Task.FromResult<SydneyResponse?>(modifiedResponse));
 
         Router router = new Router();
         router.AddHandler("/foo/bar", handler);
@@ -337,14 +340,17 @@ public class SydneyHttpApplicationTests
         context.Request.Path = new PathString("/foo/bar");
 
         SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(originalResponse));
 
         SydneyResponse modifiedResponse = new SydneyResponse(HttpStatusCode.ExpectationFailed);
         SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
-        A.CallTo(() => middleware.PostHandlerHookAsync(A<SydneyRequest>.Ignored, A<SydneyResponse>.Ignored))
-            .Returns(Task.FromResult<SydneyResponse>(null));
+        A.CallTo(
+            () => middleware.PostHandlerHookAsync(
+                A<SydneyRequest>.Ignored,
+                A<SydneyResponse>.Ignored))
+            .Returns(Task.FromResult<SydneyResponse?>(null));
 
         Router router = new Router();
         router.AddHandler("/foo/bar", handler);

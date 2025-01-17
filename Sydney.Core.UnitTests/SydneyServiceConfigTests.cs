@@ -1,9 +1,8 @@
-﻿namespace Sydney.Core.UnitTests;
-
-using System;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using FakeItEasy;
 using Xunit;
+
+namespace Sydney.Core.UnitTests;
 
 public class SydneyServiceConfigTests
 {

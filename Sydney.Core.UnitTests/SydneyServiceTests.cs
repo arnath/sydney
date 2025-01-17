@@ -7,6 +7,7 @@ namespace Sydney.Core.UnitTests;
 
 public class SydneyServiceTests
 {
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
     [Fact]
     public void SydneyServiceConstructorThrowsExceptionIfLoggerFactoryIsNull()
     {
@@ -24,6 +25,7 @@ public class SydneyServiceTests
                 () => new SydneyService(NullLoggerFactory.Instance, null));
         Assert.Equal("config", exception.ParamName);
     }
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
     [Fact]
     public void SydneyServiceConstructorCallsValidateOnConfig()
@@ -69,48 +71,50 @@ public class SydneyServiceTests
             exception.Message);
     }
 
-    // [Fact]
-    // public void AddRestHandlerThrowsArgumentNullExceptionWhenPathIsNull()
-    // {
-    //     RestHandlerBase handler = A.Fake<RestHandlerBase>();
-    //     SydneyService service = new SydneyService(
-    //         NullLoggerFactory.Instance,
-    //         SydneyServiceConfig.CreateHttp());
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+    [Fact]
+    public void AddHandlerThrowsArgumentNullExceptionWhenPathIsNull()
+    {
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            SydneyServiceConfig.CreateHttp());
 
-    //     ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
-    //         () => service.AddRestHandler(null, handler));
-    //     Assert.Equal("path", exception.ParamName);
-    // }
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
+            () => service.AddHandler(null, handler));
+        Assert.Equal("path", exception.ParamName);
+    }
 
-    // [Fact]
-    // public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
-    // {
-    //     SydneyService service = new SydneyService(
-    //         NullLoggerFactory.Instance,
-    //         SydneyServiceConfig.CreateHttp());
+    [Fact]
+    public void AddRestHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
+    {
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            SydneyServiceConfig.CreateHttp());
 
-    //     ArgumentNullException exception =
-    //         Assert.Throws<ArgumentNullException>(
-    //             () => service.AddRestHandler("/foo/bar", null));
-    //     Assert.Equal("handler", exception.ParamName);
-    // }
+        ArgumentNullException exception =
+            Assert.Throws<ArgumentNullException>(
+                () => service.AddHandler("/foo/bar", null));
+        Assert.Equal("handler", exception.ParamName);
+    }
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
-    // [Fact]
-    // public async Task AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
-    // {
-    //     RestHandlerBase handler = A.Fake<RestHandlerBase>();
-    //     SydneyService service = new SydneyService(
-    //         NullLoggerFactory.Instance,
-    //         SydneyServiceConfig.CreateHttp());
+    [Fact]
+    public async Task AddRestHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
+    {
+        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            SydneyServiceConfig.CreateHttp());
 
-    //     // Don't await start because it never returns.
-    //     _ = service.StartAsync();
-    //     Exception exception = Assert.Throws<InvalidOperationException>(
-    //         () => service.AddRestHandler("/foo/bar", handler));
-    //     await service.StopAsync();
+        // Don't await start because it never returns.
+        _ = service.StartAsync();
+        Exception exception = Assert.Throws<InvalidOperationException>(
+            () => service.AddHandler("/foo/bar", handler));
+        await service.StopAsync();
 
-    //     Assert.Equal(
-    //         "Cannot add a handler after the service has been started.",
-    //         exception.Message);
-    // }
+        Assert.Equal(
+            "Cannot add a handler after the service has been started.",
+            exception.Message);
+    }
 }
