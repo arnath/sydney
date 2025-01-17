@@ -29,16 +29,6 @@ internal class Router
 
     public void AddHandler(string path, SydneyHandlerBase handler)
     {
-        // Check if there's already a handler on this path. We use the match method instead
-        // of the list of handler paths to catch attempts to register the same path with different
-        // parameter names. This cannot be called when the service is running.
-        if (this.TryMatchPath(path, out _))
-        {
-            throw new ArgumentException(
-                "There is already a registered handler for this path.",
-                nameof(path));
-        }
-
         string trimmedPath = TrimSlashes(path);
         string[] segments = trimmedPath.Split('/');
         HashSet<string> parameterNames = new HashSet<string>();
@@ -92,6 +82,12 @@ internal class Router
 
                 node = child;
             }
+        }
+
+        if (node.Handler != null)
+        {
+            throw new InvalidOperationException(
+                "There is already a handler registered for this path.");
         }
 
         node.Handler = handler;

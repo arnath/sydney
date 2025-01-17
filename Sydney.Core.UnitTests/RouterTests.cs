@@ -15,7 +15,7 @@ public class RouterTests
     public RouterTests()
     {
         this.router = new Router();
-        this.handler = A.Fake<RestHandlerBase>();
+        this.handler = A.Fake<SydneyHandlerBase>();
     }
 
     [Fact]
@@ -64,6 +64,19 @@ public class RouterTests
     }
 
     [Fact]
+    public void AddHandlerCannotAddDuplicateRoute()
+    {
+        this.router.AddHandler("/users/{id}/profile", this.handler);
+
+        InvalidOperationException exception =
+            Assert.Throws<InvalidOperationException>(
+                () => this.router.AddHandler("/users/{id}/profile", this.handler));
+        Assert.Equal(
+            "There is already a handler registered for this path.",
+            exception.Message);
+    }
+
+    [Fact]
     public void AddHandlerRegistersEmptyRouteAsChild()
     {
         this.router.AddHandler("/", this.handler);
@@ -86,16 +99,14 @@ public class RouterTests
     }
 
     [Fact]
-    public void AddHandlerCannotAddDuplicateRoute()
+    public void AddHandlerAllowsMoreSpecificVersionOfRoute()
     {
-        this.router.AddHandler("/users/{id}/profile", this.handler);
+        this.router.AddHandler("/users/{userId}/books/{bookId}", this.handler);
+        this.router.AddHandler("/users/foo/books/bar/pew", this.handler);
 
-        ArgumentException exception =
-            Assert.Throws<ArgumentException>(
-                () => this.router.AddHandler("/users/{userid}/profile", this.handler));
-        Assert.Equal(
-            "There is already a registered handler for this path. (Parameter 'path')",
-            exception.Message);
+        PathNode root = GetRouteGraphRoot(this.router);
+        Assert.NotNull(root.Children["users"].Children["foo"].Children["books"].Children["bar"].Children["pew"].Handler);
+        Assert.NotNull(root.Children["users"].Parameter.Value.Value.Children["books"].Parameter.Value.Value.Handler);
     }
 
     [Fact]
