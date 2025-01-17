@@ -11,13 +11,17 @@ internal class Router
         this.handlerPaths = new List<string>();
     }
 
+    /// <summary>
+    /// The root node of the routing tree. This node will never have a handler.
+    /// </summary>
     private readonly PathNode root;
-    private readonly List<string> handlerPaths;
 
     /// <summary>
-    /// Gets the list of registered handler paths. This is used exclusively to display routes when
-    /// the service starts.
+    /// The list of registered handle paths. This is used exclusively to display routes when the
+    /// service starts.
     /// </summary>
+    private readonly List<string> handlerPaths;
+
     public IReadOnlyList<string> HandlerPaths
     {
         get { return this.handlerPaths; }
@@ -25,6 +29,16 @@ internal class Router
 
     public void AddHandler(string path, SydneyHandlerBase handler)
     {
+        // Check if there's already a handler on this path. We use the match method instead
+        // of the list of handler paths to catch attempts to register the same path with different
+        // parameter names. This cannot be called when the service is running.
+        if (this.TryMatchPath(path, out _))
+        {
+            throw new ArgumentException(
+                "There is already a registered handler for this path.",
+                nameof(path));
+        }
+
         string trimmedPath = TrimSlashes(path);
         string[] segments = trimmedPath.Split('/');
         HashSet<string> parameterNames = new HashSet<string>();
@@ -111,32 +125,20 @@ internal class Router
         Dictionary<string, string> pathParametersSoFar,
         List<MatchResult> results)
     {
-        string segment = segments[index];
-        if (index == segments.Length - 1)
+        if (index == segments.Length)
         {
             if (node.Handler != null)
             {
-                if (node.Type == PathNodeType.Parameter)
-                {
-                    pathParametersSoFar.Add(node.Value, segment);
-                    results.Add(
-                        new MatchResult(
-                            node.Handler,
-                            new Dictionary<string, string>(pathParametersSoFar)));
-                    pathParametersSoFar.Remove(node.Value);
-                }
-                else if (node.Value == segment)
-                {
-                    results.Add(
-                        new MatchResult(
-                            node.Handler,
-                            new Dictionary<string, string>(pathParametersSoFar)));
-                }
+                results.Add(
+                    new MatchResult(
+                        node.Handler,
+                        new Dictionary<string, string>(pathParametersSoFar)));
             }
 
             return;
         }
 
+        string segment = segments[index];
         if (node.Children.TryGetValue(segment, out PathNode? child))
         {
             MatchPathRecursive(
@@ -164,7 +166,7 @@ internal class Router
         string segment,
         [NotNullWhen(returnValue: true)] out string? parameterName)
     {
-        if (segment[0] == '{' && segment[segment.Length - 1] == '}')
+        if (segment.Length > 2 && segment[0] == '{' && segment[segment.Length - 1] == '}')
         {
             parameterName = segment.Substring(1, segment.Length - 2);
             return true;

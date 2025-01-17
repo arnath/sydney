@@ -47,12 +47,24 @@ public class RouterTests
             Assert.Throws<InvalidOperationException>(
                 () => this.router.AddHandler("/users/{id}/messages/{id}", this.handler));
         Assert.Equal(
-            "The parameter name id is used twice in this route. Parameters must be unique.",
+            "The parameter id is used twice in this route. Parameters must be unique.",
             exception.Message);
     }
 
     [Fact]
-    public void AddRouteRegistersEmptyRouteAsChild()
+    public void AddHandlerCannotRenameParameter()
+    {
+        this.router.AddHandler("/books/{id}/return", this.handler);
+        InvalidOperationException exception =
+            Assert.Throws<InvalidOperationException>(
+                () => this.router.AddHandler("/books/{foo}/bar", this.handler));
+        Assert.Equal(
+            "The parameter foo is attempting to rename an already existing parameter.",
+            exception.Message);
+    }
+
+    [Fact]
+    public void AddHandlerRegistersEmptyRouteAsChild()
     {
         this.router.AddHandler("/", this.handler);
 
@@ -63,7 +75,7 @@ public class RouterTests
     }
 
     [Fact]
-    public void AddRouteTrimsLeadingAndTrailingSlashes()
+    public void AddHandlerTrimsLeadingAndTrailingSlashes()
     {
         this.router.AddHandler("///users///", this.handler);
 
@@ -73,41 +85,57 @@ public class RouterTests
         Assert.Equal(this.handler, usersNode.Handler);
     }
 
-    // [Fact]
-    // public void AddRouteParameterSegmentEndsPrefix()
-    // {
-    //     this.router.AddRoute("/system/users/{id}/profile", this.handler);
+    [Fact]
+    public void AddHandlerCannotAddDuplicateRoute()
+    {
+        this.router.AddHandler("/users/{id}/profile", this.handler);
 
-    //     RouteNode root = GetRouteGraphRoot(this.router);
-    //     RouteNode node = root.Children.Single();
-    //     Assert.Equal("system", node.Segment);
+        ArgumentException exception =
+            Assert.Throws<ArgumentException>(
+                () => this.router.AddHandler("/users/{userid}/profile", this.handler));
+        Assert.Equal(
+            "There is already a registered handler for this path. (Parameter 'path')",
+            exception.Message);
+    }
 
-    //     node = node.Children.Single();
-    //     Assert.Equal("users", node.Segment);
+    [Fact]
+    public void AddHandlerCreatesRoutingTree()
+    {
+        this.router.AddHandler("/users/{userId}/books/{bookId}", this.handler);
 
-    //     ParameterRouteNode parameterNode = node.Children.Single() as ParameterRouteNode;
-    //     Assert.Equal("{id}", parameterNode.Segment);
-    //     Assert.Equal("id", parameterNode.ParameterName);
+        PathNode node = GetRouteGraphRoot(this.router);
+        Assert.True(node.Children.TryGetValue("users", out node));
 
-    //     node = parameterNode.Children.Single();
-    //     Assert.Equal("profile", node.Segment);
+        Assert.Equal("users", node.Value);
+        Assert.Equal(PathNodeType.Segment, node.Type);
+        Assert.True(node.Parameter.HasValue);
+        Assert.Equal("userId", node.Parameter.Value.Key);
+        node = node.Parameter.Value.Value;
 
-    //     HandlerRouteNode handlerNode = node.Children.Single() as HandlerRouteNode;
-    //     Assert.Equal(this.handler, handlerNode.Handler);
-    // }
+        Assert.Equal("userId", node.Value);
+        Assert.Equal(PathNodeType.Parameter, node.Type);
+        Assert.True(node.Children.TryGetValue("books", out node));
 
-    // [Fact]
-    // public void AddRouteCannotAddDuplicateRoute()
-    // {
-    //     this.router.AddRoute("/users/{id}/profile", this.handler);
+        Assert.Equal("books", node.Value);
+        Assert.Equal(PathNodeType.Segment, node.Type);
+        Assert.True(node.Parameter.HasValue);
+        Assert.Equal("bookId", node.Parameter.Value.Key);
+        node = node.Parameter.Value.Value;
 
-    //     ArgumentException exception =
-    //         Assert.Throws<ArgumentException>(
-    //             () => this.router.AddRoute("/users/{userid}/profile", this.handler));
-    //     Assert.Equal(
-    //         "There is already a registered handler for this route. (Parameter 'route')",
-    //         exception.Message);
-    // }
+        Assert.Equal("bookId", node.Value);
+        Assert.Equal(PathNodeType.Parameter, node.Type);
+        Assert.Empty(node.Children);
+    }
+
+    [Fact]
+    public void TryMatchPathMatchesExactPath()
+    {
+        this.router.AddHandler("/three/level/path", this.handler);
+
+        Assert.True(this.router.TryMatchPath("/three/level/path", out MatchResult matchResult));
+        Assert.Equal(this.handler, matchResult.Handler);
+        Assert.Empty(matchResult.PathParameters);
+    }
 
     // [Fact]
     // public void MatchRouteDoesNotMatchSubPath()
@@ -117,15 +145,7 @@ public class RouterTests
     //     Assert.False(this.router.TryMatchRoute("/three/level/path/plusone", out _));
     // }
 
-    // [Fact]
-    // public void MatchRouteMatchesExactPath()
-    // {
-    //     this.router.AddRoute("/three/level/path", this.handler);
 
-    //     Assert.True(this.router.TryMatchRoute("/three/level/path", out RouteMatch match));
-    //     Assert.Equal(this.handler, match.Handler);
-    //     Assert.Empty(match.PathParameters);
-    // }
 
     // [Fact]
     // public void MatchRouteParametersMatchEverything()
