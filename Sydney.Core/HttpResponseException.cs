@@ -1,7 +1,6 @@
-﻿namespace Sydney.Core;
+﻿using System.Net;
 
-using System;
-using System.Net;
+namespace Sydney.Core;
 
 /// <summary>
 /// Exception type that results in the specified HTTP status code and

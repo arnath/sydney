@@ -1,10 +1,5 @@
 ﻿namespace Sydney.Core;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-
 /// <summary>
 /// Represents a request sent to a Sydney service using ASP.NET Core's HTTP request object.
 /// </summary>

@@ -1,8 +1,7 @@
-﻿namespace Sydney.Core;
-
-using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
+
+namespace Sydney.Core;
 
 /// <summary>
 /// Represents a response from a Sydney service. This class is used to return

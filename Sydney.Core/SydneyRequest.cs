@@ -1,12 +1,7 @@
-﻿namespace Sydney.Core;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+
+namespace Sydney.Core;
 
 /// <summary>
 /// Abstract class that represents a request sent to a Sydney service. This class

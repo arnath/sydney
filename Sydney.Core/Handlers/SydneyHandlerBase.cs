@@ -1,7 +1,5 @@
 namespace Sydney.Core.Handlers;
 
-using System.Threading.Tasks;
-
 /// <summary>
 /// Base class for a request handler.
 ///
