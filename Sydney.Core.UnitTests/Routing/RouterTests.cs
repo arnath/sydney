@@ -9,13 +9,14 @@ namespace Sydney.Core.UnitTests.Routing;
 public class RouterTests
 {
     private readonly Router router;
-
     private readonly SydneyHandlerBase handler;
+    private readonly SydneyResourceHandlerBase resourceHandler;
 
     public RouterTests()
     {
         this.router = new Router();
         this.handler = A.Fake<SydneyHandlerBase>();
+        this.resourceHandler = A.Fake<SydneyResourceHandlerBase>();
     }
 
     [Fact]
@@ -98,9 +99,9 @@ public class RouterTests
     }
 
     [Fact]
-    public void AddRouteCreatesRoutingTree()
+    public void AddHandlerAddsOneRoute()
     {
-        this.router.AddRoute(this.handler, ["users", "{userId}", "books", "{bookId}"]);
+        this.router.AddHandler(this.handler, "/users/{userId}/books/{bookId}");
 
         PathNode? node = GetRouteGraphRoot(this.router);
         Assert.True(node.Children.TryGetValue("users", out node));
@@ -120,6 +121,28 @@ public class RouterTests
 
         Assert.Equal("bookId", node.Value);
         Assert.Empty(node.Children);
+    }
+
+    [Fact]
+    public void AddResourceHandlerThrowsArgumentExceptionWhenPathDoesNotEndWithParameter()
+    {
+        ArgumentException exception =
+            Assert.Throws<ArgumentException>(
+                () => this.router.AddResourceHandler(this.resourceHandler, "/users/books"));
+        Assert.Equal(
+            "The single resource path must end with a parameter. (param: 'path')",
+            exception.Message);
+    }
+
+    [Fact]
+    public void AddResourceHandlerAddsTwoRoutes()
+    {
+        this.router.AddResourceHandler(this.resourceHandler, "/users/books/{bookId}");
+
+        PathNode? node = GetRouteGraphRoot(this.router);
+        Assert.Equal(this.resourceHandler, node.Children["user"].Children["books"].Handler);
+        Assert.Equal(this.resourceHandler, node.Children["user"].Children["books"].Parameter?.Handler);
+        Assert.Equal("bookId", node.Children["user"].Children["books"].Parameter?.Value);
     }
 
     [Fact]
