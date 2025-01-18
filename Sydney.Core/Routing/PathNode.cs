@@ -4,17 +4,15 @@ namespace Sydney.Core.Routing;
 
 internal class PathNode
 {
-    public PathNode(PathNodeType type, string value) : this(type, value, null) { }
+    public PathNode(string value) : this(value, null) { }
 
-    public PathNode(PathNodeType type, string value, PathNode? parent)
+    public PathNode(string value, PathNode? parent)
     {
-        this.Type = type;
         this.Value = value;
         this.Parent = parent;
         this.Children = new Dictionary<string, PathNode>();
     }
 
-    public PathNodeType Type { get; }
     public string Value { get; }
     public PathNode? Parent { get; }
 

@@ -7,7 +7,7 @@ internal class Router
 {
     public Router()
     {
-        this.root = new PathNode(PathNodeType.Segment, string.Empty);
+        this.root = new PathNode(string.Empty);
         this.handlerPaths = new List<string>();
     }
 
@@ -27,15 +27,76 @@ internal class Router
         get { return this.handlerPaths; }
     }
 
-    public void AddHandler(string path, SydneyHandlerBase handler)
+    /// <summary>
+    /// Adds a handler by registering a route for the handler path.
+    /// </summary>
+    public void AddHandler(SydneyHandlerBase handler, string path)
     {
         string trimmedPath = TrimSlashes(path);
         string[] segments = trimmedPath.Split('/');
+        this.AddRoute(handler, segments);
+        this.handlerPaths.Add(trimmedPath);
+    }
+
+    /// <summary>
+    /// Adds a resource handler by registering the handler twice, once for the resource route
+    /// and once for the collection route.
+    /// </summary>
+    /// <param name="handler"></param>
+    /// <param name="singleResourcePath"></param>
+    /// <exception cref="ArgumentException"></exception>
+    public void AddResourceHandler(SydneyResourceHandlerBase handler, string singleResourcePath)
+    {
+        string trimmedPath = TrimSlashes(singleResourcePath);
+        string[] segments = trimmedPath.Split('/');
+        if (!TryGetParameterName(segments[segments.Length - 1], out _))
+        {
+            throw new ArgumentException(
+                "The single resource path must end with a parameter.",
+                nameof(singleResourcePath));
+        }
+
+        // The collection path is the resource path without the ID segment (the last one).
+        string[] collectionSegments = segments.Take(segments.Length - 1).ToArray();
+
+        // We register the same handler for both the resource route and the collection route.
+        this.AddRoute(handler, segments);
+        this.AddRoute(handler, collectionSegments);
+        this.handlerPaths.Add(trimmedPath);
+        this.handlerPaths.Add(string.Join("/", collectionSegments));
+    }
+
+    public bool TryMatchPath(
+        string path,
+        [NotNullWhen(returnValue: true)] out MatchResult? match)
+    {
+        List<MatchResult> results = new List<MatchResult>();
+        match = null;
+        string trimmedPath = TrimSlashes(path);
+        string[] segments = trimmedPath.Split('/');
+
+        MatchPathRecursive(
+            this.root,
+            segments,
+            0,
+            new Dictionary<string, string>(),
+            results);
+
+        // The matching process can return more than one handler, if there's both
+        // a route with parameters and a more specific route registered for this path.
+        // In this case, we take the route with the least parameters.
+        match = results.OrderBy((r) => r.PathParameters.Count).FirstOrDefault();
+
+        return match != null;
+    }
+
+    private void AddRoute(SydneyHandlerBase handler, string[] routeSegments)
+    {
         HashSet<string> parameterNames = new HashSet<string>();
         PathNode node = this.root;
-        for (int i = 0; i < segments.Length; i++)
+        for (int i = 0; i < routeSegments.Length; i++)
         {
-            string segment = segments[i];
+            string segment = routeSegments[i];
 
             // The first segment can only be empty if the string is a single slash.
             if (i > 0 && string.IsNullOrWhiteSpace(segment))
@@ -55,7 +116,7 @@ internal class Router
                 parameterNames.Add(parameterName);
                 if (node.Parameter == null)
                 {
-                    node.Parameter = new PathNode(PathNodeType.Parameter, parameterName, node);
+                    node.Parameter = new PathNode(parameterName, node);
                 }
                 else if (parameterName != node.Parameter.Value)
                 {
@@ -70,7 +131,7 @@ internal class Router
             {
                 if (!node.Children.TryGetValue(segment, out PathNode? child))
                 {
-                    child = new PathNode(PathNodeType.Segment, segment, node);
+                    child = new PathNode(segment, node);
                     node.Children[segment] = child;
                 }
 
@@ -85,27 +146,6 @@ internal class Router
         }
 
         node.Handler = handler;
-        handlerPaths.Add(trimmedPath);
-    }
-
-    public bool TryMatchPath(
-        string path,
-        [NotNullWhen(returnValue: true)] out MatchResult? match)
-    {
-        List<MatchResult> results = new List<MatchResult>();
-        match = null;
-        string trimmedPath = TrimSlashes(path);
-        string[] segments = trimmedPath.Split('/');
-
-        MatchPathRecursive(
-            this.root,
-            segments,
-            0,
-            new Dictionary<string, string>(),
-            results);
-        match = results.OrderBy((r) => r.PathParameters.Count).FirstOrDefault();
-
-        return match != null;
     }
 
     private static void MatchPathRecursive(
@@ -115,8 +155,12 @@ internal class Router
         Dictionary<string, string> pathParametersSoFar,
         List<MatchResult> results)
     {
+        // Recursively matches paths using a backtracking algorithm that keeps path parameters
+        // as it goes along.
         if (index == segments.Length)
         {
+            // If we've reached the last segment, either there's a handler here or it's
+            // not a match.
             if (node.Handler != null)
             {
                 results.Add(
@@ -129,6 +173,8 @@ internal class Router
         }
 
         string segment = segments[index];
+
+        // If there's a child with a matching segment value, recurse on that child.
         if (node.Children.TryGetValue(segment, out PathNode? child))
         {
             MatchPathRecursive(
@@ -139,6 +185,8 @@ internal class Router
                 results);
         }
 
+        // Parameter nodes tentatively match everything. If there's a parameter child,
+        // recurse on that as well. Backtrack after recursion is finished.
         if (node.Parameter != null)
         {
             pathParametersSoFar.Add(node.Parameter.Value, segment);

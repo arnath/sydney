@@ -132,21 +132,32 @@ public class SydneyService : IDisposable
     }
 
     /// <summary>
-    /// Adds a handler for the specified path.
+    /// Adds a handler for the request path. This method cannot be called after the service has
+    /// been started. There are a few special considerations if the handler is a
+    /// <see cref="SydneyResourceHandlerBase"/> instance:
+    /// 1) The path must be the path to the single resource. For example, if your collection is
+    ///    books and it lives at "/user/books", the resource path is "/user/books/{id}".
+    /// 2) Two routes are registered for a resource handler: one for the collection path and
+    ///    one for the individual resource path.
     /// </summary>
     /// <param name="path">The path for the handler.</param>
     /// <param name="handler">The handler to add.</param>
-    public void AddHandler(string path, SydneyHandlerBase handler)
+    public void AddHandler(SydneyHandlerBase handler, string path)
     {
-        ArgumentNullException.ThrowIfNullOrWhiteSpace(path);
-        ArgumentNullException.ThrowIfNull(handler);
-
         if (this.runningTaskCompletionSource != null)
         {
-            throw new InvalidOperationException("Cannot add a handler after the service has been started.");
+            throw new InvalidOperationException(
+                "Cannot add a handler after the service has been started.");
         }
 
-        this.router.AddHandler(path, handler);
+        if (handler is SydneyResourceHandlerBase resourceHandler)
+        {
+            this.router.AddResourceHandler(resourceHandler, path);
+        }
+        else
+        {
+            this.router.AddHandler(handler, path);
+        }
     }
 
     public void Dispose()
