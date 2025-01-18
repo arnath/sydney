@@ -90,7 +90,7 @@ internal class Router
         return match != null;
     }
 
-    private void AddRoute(SydneyHandlerBase handler, string[] routeSegments)
+    internal void AddRoute(SydneyHandlerBase handler, string[] routeSegments)
     {
         HashSet<string> parameterNames = new HashSet<string>();
         PathNode node = this.root;

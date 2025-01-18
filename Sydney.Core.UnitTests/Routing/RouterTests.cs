@@ -19,45 +19,45 @@ public class RouterTests
     }
 
     [Fact]
-    public void AddHandlerSegmentsMustBeAtLeastOneCharacter()
+    public void AddRouteSegmentsMustBeAtLeastOneCharacter()
     {
         InvalidOperationException exception =
             Assert.Throws<InvalidOperationException>(
-                () => this.router.AddHandler("/users//profile", this.handler));
+                () => this.router.AddRoute(this.handler, ["users", "", "profile"]));
         Assert.Equal(
             "Route segments must be at least one non-whitespace character long.",
             exception.Message);
     }
 
     [Fact]
-    public void AddHandlerSegmentsMustBeNonWhitespace()
+    public void AddRouteSegmentsMustBeNonWhitespace()
     {
         InvalidOperationException exception =
             Assert.Throws<InvalidOperationException>(
-                () => this.router.AddHandler("/users/      /profile", this.handler));
+                () => this.router.AddRoute(this.handler, ["users", "     ", "profile"]));
         Assert.Equal(
             "Route segments must be at least one non-whitespace character long.",
             exception.Message);
     }
 
     [Fact]
-    public void AddHandlerCannotUseSameParameterTwice()
+    public void AddRouteCannotUseSameParameterTwice()
     {
         InvalidOperationException exception =
             Assert.Throws<InvalidOperationException>(
-                () => this.router.AddHandler("/users/{id}/messages/{id}", this.handler));
+                () => this.router.AddRoute(this.handler, ["users", "{id}", "messages", "{id}"]));
         Assert.Equal(
             "The parameter id is used twice in this route. Parameters must be unique.",
             exception.Message);
     }
 
     [Fact]
-    public void AddHandlerCannotRenameParameter()
+    public void AddRouteCannotRenameParameter()
     {
-        this.router.AddHandler("/books/{id}/return", this.handler);
+        this.router.AddRoute(this.handler, ["books", "{id}", "return"]);
         InvalidOperationException exception =
             Assert.Throws<InvalidOperationException>(
-                () => this.router.AddHandler("/books/{foo}/bar", this.handler));
+                () => this.router.AddRoute(this.handler, ["books", "{foo}", "bar"]));
         Assert.Equal(
             "The parameter foo is attempting to rename an already existing parameter.",
             exception.Message);
@@ -66,20 +66,19 @@ public class RouterTests
     [Fact]
     public void AddHandlerCannotAddDuplicateRoute()
     {
-        this.router.AddHandler("/users/{id}/profile", this.handler);
-
+        this.router.AddRoute(this.handler, ["users", "{id}", "profile"]);
         InvalidOperationException exception =
             Assert.Throws<InvalidOperationException>(
-                () => this.router.AddHandler("/users/{id}/profile", this.handler));
+                () => this.router.AddRoute(this.handler, ["users", "{id}", "profile"]));
         Assert.Equal(
             "There is already a handler registered for this path.",
             exception.Message);
     }
 
     [Fact]
-    public void AddHandlerRegistersEmptyRouteAsChild()
+    public void AddRouteRegistersEmptyRouteAsChild()
     {
-        this.router.AddHandler("/", this.handler);
+        this.router.AddRoute(this.handler, [string.Empty]);
 
         PathNode root = GetRouteGraphRoot(this.router);
         Assert.True(root.Children.TryGetValue(string.Empty, out PathNode? emptyRouteNode));
@@ -88,21 +87,10 @@ public class RouterTests
     }
 
     [Fact]
-    public void AddHandlerTrimsLeadingAndTrailingSlashes()
+    public void AddRouteAllowsMoreSpecificVersionOfRoute()
     {
-        this.router.AddHandler("///users///", this.handler);
-
-        PathNode root = GetRouteGraphRoot(this.router);
-        Assert.True(root.Children.TryGetValue("users", out PathNode? usersNode));
-        Assert.Equal("users", usersNode.Value);
-        Assert.Equal(this.handler, usersNode.Handler);
-    }
-
-    [Fact]
-    public void AddHandlerAllowsMoreSpecificVersionOfRoute()
-    {
-        this.router.AddHandler("/users/{userId}/books/{bookId}", this.handler);
-        this.router.AddHandler("/users/foo/books/bar/pew", this.handler);
+        this.router.AddRoute(this.handler, ["users", "{userId}", "books", "{bookId}"]);
+        this.router.AddRoute(this.handler, ["users", "foo", "books", "bar", "pew"]);
 
         PathNode root = GetRouteGraphRoot(this.router);
         Assert.NotNull(root.Children["users"].Children["foo"].Children["books"].Children["bar"].Children["pew"].Handler);
@@ -110,38 +98,34 @@ public class RouterTests
     }
 
     [Fact]
-    public void AddHandlerCreatesRoutingTree()
+    public void AddRouteCreatesRoutingTree()
     {
-        this.router.AddHandler("/users/{userId}/books/{bookId}", this.handler);
+        this.router.AddRoute(this.handler, ["users", "{userId}", "books", "{bookId}"]);
 
         PathNode? node = GetRouteGraphRoot(this.router);
         Assert.True(node.Children.TryGetValue("users", out node));
 
         Assert.Equal("users", node.Value);
-        Assert.Equal(PathNodeType.Segment, node.Type);
         Assert.NotNull(node.Parameter);
         Assert.Equal("userId", node.Parameter.Value);
         node = node.Parameter;
 
         Assert.Equal("userId", node.Value);
-        Assert.Equal(PathNodeType.Parameter, node.Type);
         Assert.True(node.Children.TryGetValue("books", out node));
 
         Assert.Equal("books", node.Value);
-        Assert.Equal(PathNodeType.Segment, node.Type);
         Assert.NotNull(node.Parameter);
         Assert.Equal("bookId", node.Parameter.Value);
         node = node.Parameter;
 
         Assert.Equal("bookId", node.Value);
-        Assert.Equal(PathNodeType.Parameter, node.Type);
         Assert.Empty(node.Children);
     }
 
     [Fact]
     public void TryMatchPathTrimsLeadingAndTrailingSlashes()
     {
-        this.router.AddHandler("/three/level/path", this.handler);
+        this.router.AddHandler(this.handler, "/three/level/path");
 
         Assert.True(
             this.router.TryMatchPath(
@@ -154,7 +138,7 @@ public class RouterTests
     [Fact]
     public void TryMatchPathMatchesExactPath()
     {
-        this.router.AddHandler("/three/level/path", this.handler);
+        this.router.AddHandler(this.handler, "/three/level/path");
 
         Assert.True(this.router.TryMatchPath("/three/level/path", out MatchResult? matchResult));
         Assert.Equal(this.handler, matchResult.Handler);
@@ -164,7 +148,7 @@ public class RouterTests
     [Fact]
     public void TryMatchPathDoesNotMatchPatchOfSameLength()
     {
-        this.router.AddHandler("/three/level/path", this.handler);
+        this.router.AddHandler(this.handler, "/three/level/path");
 
         Assert.False(this.router.TryMatchPath("/three/level/different", out _));
     }
@@ -172,7 +156,7 @@ public class RouterTests
     [Fact]
     public void TryMatchPathDoesNotMatchSubPath()
     {
-        this.router.AddHandler("/three/level/path", this.handler);
+        this.router.AddHandler(this.handler, "/three/level/path");
 
         Assert.False(this.router.TryMatchPath("/three/level/path/plusone", out _));
     }
@@ -180,7 +164,7 @@ public class RouterTests
     [Fact]
     public void TryMatchPathParametersMatchEverything()
     {
-        this.router.AddHandler("/this/{noun}/is/{adj}", this.handler);
+        this.router.AddHandler(this.handler, "/this/{noun}/is/{adj}");
 
         Assert.True(this.router.TryMatchPath("/this/guy/is/wack", out MatchResult? match));
         Assert.Equal(this.handler, match.Handler);
@@ -198,8 +182,8 @@ public class RouterTests
     [Fact]
     public void TryMatchPathPrefersMoreSpecificPath()
     {
-        this.router.AddHandler("/this/{noun}/is/{adj}", this.handler);
-        this.router.AddHandler("/this/dog/is/cute", this.handler);
+        this.router.AddHandler(this.handler, "/this/{noun}/is/{adj}");
+        this.router.AddHandler(this.handler, "/this/dog/is/cute");
 
         Assert.True(this.router.TryMatchPath("/this/dog/is/cute", out MatchResult? match));
         Assert.Equal(this.handler, match.Handler);

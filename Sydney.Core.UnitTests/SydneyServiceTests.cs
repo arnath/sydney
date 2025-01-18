@@ -71,34 +71,6 @@ public class SydneyServiceTests
             exception.Message);
     }
 
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-    [Fact]
-    public void AddHandlerThrowsArgumentNullExceptionWhenPathIsNull()
-    {
-        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
-        SydneyService service = new SydneyService(
-            NullLoggerFactory.Instance,
-            SydneyServiceConfig.CreateHttp());
-
-        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
-            () => service.AddHandler(null, handler));
-        Assert.Equal("path", exception.ParamName);
-    }
-
-    [Fact]
-    public void AddHandlerThrowsArgumentNullExceptionWhenHandlerIsNull()
-    {
-        SydneyService service = new SydneyService(
-            NullLoggerFactory.Instance,
-            SydneyServiceConfig.CreateHttp());
-
-        ArgumentNullException exception =
-            Assert.Throws<ArgumentNullException>(
-                () => service.AddHandler("/foo/bar", null));
-        Assert.Equal("handler", exception.ParamName);
-    }
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
-
     [Fact]
     public async Task AddHandlerThrowsInvalidOperationExceptionWhenServiceIsRunning()
     {
@@ -110,7 +82,7 @@ public class SydneyServiceTests
         // Don't await start because it never returns.
         _ = service.StartAsync();
         Exception exception = Assert.Throws<InvalidOperationException>(
-            () => service.AddHandler("/foo/bar", handler));
+            () => service.AddHandler(handler, "/foo/bar"));
         await service.StopAsync();
 
         Assert.Equal(
