@@ -130,7 +130,7 @@ public class RouterTests
             Assert.Throws<ArgumentException>(
                 () => this.router.AddResourceHandler(this.resourceHandler, "/users/books"));
         Assert.Equal(
-            "The single resource path must end with a parameter. (param: 'path')",
+            "The single resource path must end with a parameter. (Parameter 'singleResourcePath')",
             exception.Message);
     }
 
@@ -140,9 +140,9 @@ public class RouterTests
         this.router.AddResourceHandler(this.resourceHandler, "/users/books/{bookId}");
 
         PathNode? node = GetRouteGraphRoot(this.router);
-        Assert.Equal(this.resourceHandler, node.Children["user"].Children["books"].Handler);
-        Assert.Equal(this.resourceHandler, node.Children["user"].Children["books"].Parameter?.Handler);
-        Assert.Equal("bookId", node.Children["user"].Children["books"].Parameter?.Value);
+        Assert.Equal(this.resourceHandler, node.Children["users"].Children["books"].Handler);
+        Assert.Equal(this.resourceHandler, node.Children["users"].Children["books"].Parameter?.Handler);
+        Assert.Equal("bookId", node.Children["users"].Children["books"].Parameter?.Value);
     }
 
     [Fact]
