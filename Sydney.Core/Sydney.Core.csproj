@@ -5,7 +5,7 @@
     <AnalysisLevel>latest-Recommended</AnalysisLevel>
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.0.0-alpha</Version>
+    <Version>3.0.0-alpha1</Version>
     <Authors>Vijay Prakash</Authors>
     <Company />
     <Product>Sydney REST Framework</Product>
