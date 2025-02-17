@@ -13,7 +13,7 @@ public class SydneyServiceTests
     {
         ArgumentNullException exception =
             Assert.Throws<ArgumentNullException>(
-                () => new SydneyService(null, new SydneyServiceConfig(80)));
+                () => new SydneyService(null, new SydneyServiceConfig()));
         Assert.Equal("loggerFactory", exception.ParamName);
     }
 
@@ -43,7 +43,7 @@ public class SydneyServiceTests
     {
         SydneyService service = new SydneyService(
             NullLoggerFactory.Instance,
-            new SydneyServiceConfig(80));
+            new SydneyServiceConfig());
 
         // Don't await start because it never returns.
         _ = service.StartAsync();
@@ -61,7 +61,7 @@ public class SydneyServiceTests
     {
         SydneyService service = new SydneyService(
             NullLoggerFactory.Instance,
-            new SydneyServiceConfig(80));
+            new SydneyServiceConfig());
 
         InvalidOperationException exception =
             await Assert.ThrowsAsync<InvalidOperationException>(service.StopAsync);
@@ -76,7 +76,7 @@ public class SydneyServiceTests
         SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>();
         SydneyService service = new SydneyService(
             NullLoggerFactory.Instance,
-            new SydneyServiceConfig(80));
+            new SydneyServiceConfig());
 
         // Don't await start because it never returns.
         _ = service.StartAsync();

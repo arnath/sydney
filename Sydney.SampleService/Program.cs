@@ -3,14 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Serilog;
 using Sydney.Core;
 using Sydney.Core.Handlers;
-using Sydney.Core.Routing;
 
 public class Program
 {
@@ -19,35 +17,18 @@ public class Program
         ILoggerFactory loggerFactory =
             LoggerFactory.Create(
                 (builder) => builder.AddConsole().AddSerilog());
-        X509Certificate2 certificate = new X509Certificate2(File.ReadAllBytes("cert.pem"));
-        SydneyServiceConfig config =
-            SydneyServiceConfig.CreateHttps(
-                certificate,
-                port: 8000,
-                returnExceptionMessagesInResponse: true);
+        SydneyServiceConfig config = new SydneyServiceConfig();
         using (SydneyService service = new SydneyService(loggerFactory, config))
         {
-            service.AddHandler(new ProxyHandler(), "/");
-            // // Routes can have path parameters by enclosing a name in braces.
-            // service.AddRestHandler("/books/{id}", new BooksHandler());
+            // Routes can have path parameters by enclosing a name in braces.
+            service.AddHandler(new BooksHandler(), "/books/{id}");
 
-            // // Resource handlers register both the collection and individual resource URLs.
-            // // In this case, it registers /posts and /posts/{id}.
-            // service.AddResourceHandler("/posts", new PostsHandler());
+            // Resource handlers register both the collection and individual resource URLs.
+            // In this case, it registers /posts and /posts/{id}.
+            service.AddResourceHandler(new PostsHandler(), "/posts/{id}");
 
-            // // Blocks until Ctrl+C or SIGBREAK is received.
+            // Blocks until Ctrl+C or SIGBREAK is received.
             await service.StartAsync();
-        }
-    }
-
-    private class ProxyHandler : SydneyRestHandlerBase
-    {
-        public override async Task<SydneyResponse> GetAsync(SydneyRequest request)
-        {
-            Console.WriteLine(request.Path);
-            Console.WriteLine(string.Join("\n", request.Headers.Select((kvp) => $"{kvp.Key}={kvp.Value}")));
-
-            return new SydneyResponse(HttpStatusCode.OK);
         }
     }
 
@@ -77,12 +58,12 @@ public class Program
             return Task.CompletedTask;
         }
 
-        public override Task<SydneyResponse> PostHandlerHookAsync(SydneyRequest request, SydneyResponse response)
+        public override Task<SydneyResponse?> PostHandlerHookAsync(SydneyRequest request, SydneyResponse response)
         {
             // There's no reason to do this in an auth middleware but as an example,
             // middlewares can change the response in a post handler hook by returning
             // a new SydneyResponse.
-            return Task.FromResult(
+            return Task.FromResult<SydneyResponse?>(
                 new SydneyResponse(
                     HttpStatusCode.Processing,
                     new { Message = "Here's a new response" }));
@@ -110,7 +91,7 @@ public class Program
         {
             // You can deserialize a request payload by calling request.DeserializeJsonAsync<T>().
             // This will deserialize a JSON payload into whatever type you have defined.
-            dynamic post = await request.DeserializeJsonAsync<dynamic>();
+            dynamic? post = await request.DeserializeJsonAsync<dynamic>();
             if (post == null)
             {
                 // Throwing an HttpResponseException (or subclass) from your handler will

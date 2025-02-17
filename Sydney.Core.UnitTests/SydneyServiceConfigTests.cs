@@ -1,11 +1,18 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using FakeItEasy;
-using Xunit;
+﻿using Xunit;
 
 namespace Sydney.Core.UnitTests;
 
 public class SydneyServiceConfigTests
 {
+    [Fact]
+    public void ConstructorHasReasonableDefaults()
+    {
+        SydneyServiceConfig config = new SydneyServiceConfig();
+
+        Assert.Equal(8080, config.Port);
+        Assert.False(config.ReturnExceptionMessagesInResponse);
+    }
+
     [Fact]
     public void ValidateThrowsExceptionForInvalidPort()
     {

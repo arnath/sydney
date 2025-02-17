@@ -9,7 +9,7 @@ public class SydneyServiceConfig
     /// <param name="returnExceptionMessagesInResponse">Indicates whether to return exception messages in error responses.</param>
     /// <param name="middlewares">Optional list of middlewares that can implement pre and post handler hooks.</param>
     public SydneyServiceConfig(
-        ushort port,
+        ushort port = 8080,
         bool returnExceptionMessagesInResponse = false,
         params SydneyMiddleware[] middlewares)
     {
