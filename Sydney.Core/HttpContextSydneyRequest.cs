@@ -1,10 +1,5 @@
 ﻿namespace Sydney.Core;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-
 /// <summary>
 /// Represents a request sent to a Sydney service using ASP.NET Core's HTTP request object.
 /// </summary>
@@ -28,6 +23,9 @@ internal class HttpContextSydneyRequest : SydneyRequest
                 nameof(httpRequest));
         }
 
+        this.Path = httpRequest.Path.Value?.Trim('/') ?? string.Empty;
+        this.PathSegments = this.Path.Split('/');
+
         this.HttpMethod = httpMethod;
     }
 
@@ -47,7 +45,10 @@ internal class HttpContextSydneyRequest : SydneyRequest
 
     public override long ContentLength => this.httpRequest.ContentLength.GetValueOrDefault();
 
-    public override string Path => this.httpRequest.Path;
-
     public override Stream PayloadStream => this.httpRequest.Body;
+
+    public override string Path { get; }
+
+    public override IList<string> PathSegments { get; }
+
 }

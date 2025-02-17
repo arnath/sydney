@@ -1,15 +1,11 @@
-﻿namespace Sydney.Core;
-
-using System;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
+﻿using System.Text.Json;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Sydney.Core.Handlers;
 using Sydney.Core.Routing;
+
+namespace Sydney.Core;
 
 /// <summary>
 /// Represents a Sydney service. This class is the primary entry point for interacting
@@ -51,15 +47,7 @@ public class SydneyService : IDisposable
 
         // Listen on any IP on the configured port. Use HTTPs if specified.
         KestrelServerOptions serverOptions = new KestrelServerOptions();
-        serverOptions.ListenAnyIP(
-            config.Port,
-            (listenOptions) =>
-                {
-                    if (config.UseHttps)
-                    {
-                        listenOptions.UseHttps(config.HttpsServerCertificate!);
-                    }
-                });
+        serverOptions.ListenAnyIP(config.Port);
 
         // Create connection factory.
         SocketTransportFactory socketTransportFactory =
@@ -90,12 +78,11 @@ public class SydneyService : IDisposable
         this.runningTaskCompletionSource = new TaskCompletionSource();
 
         this.logger.LogInformation(
-            "Listening on {Scheme}://0.0.0.0:{Port}, press Ctrl-C to stop ...",
-            config.UseHttps ? "https" : "http",
+            "Listening on http://0.0.0.0:{Port}, press Ctrl-C to stop ...",
             config.Port);
-        foreach (string route in this.router.Routes)
+        foreach (string path in this.router.HandlerPaths)
         {
-            this.logger.LogInformation("Registered route: /{Route}/", route);
+            this.logger.LogInformation("Registered handler for path: /{Path}/", path);
         }
 
         // Set up Ctrl-Break and Ctrl-C handler.
@@ -136,46 +123,48 @@ public class SydneyService : IDisposable
     }
 
     /// <summary>
-    /// Adds a <see cref="RestHandlerBase"/> for the specified path.
-    /// </summary>
-    /// <param name="path">The path for the handler.</param>
+    /// Adds a handler for the request path. This method cannot be called after the service has
+    /// been started. Throws an exception if the handler is a resource handler.
     /// <param name="handler">The handler to add.</param>
-    public void AddRestHandler(string path, RestHandlerBase handler)
+    /// <param name="path">The path for the handler.</param>
+    public void AddHandler(SydneyHandlerBase handler, string path)
     {
-        ArgumentNullException.ThrowIfNullOrWhiteSpace(path);
-        ArgumentNullException.ThrowIfNull(handler);
+        if (handler is SydneyResourceHandlerBase)
+        {
+            throw new ArgumentException(
+                "AddHandler cannot be called with an instance of SydneyResourceHandlerBase.",
+                nameof(handler));
+        }
 
         if (this.runningTaskCompletionSource != null)
         {
-            throw new InvalidOperationException("Cannot add a handler after the service has been started.");
+            throw new InvalidOperationException(
+                "Cannot add a handler after the service has been started.");
         }
 
-        this.router.AddRoute(path, handler);
+        this.router.AddHandler(handler, path);
     }
 
     /// <summary>
-    /// Adds a <see cref="ResourceHandlerBase"/> for the specified path.
+    /// Adds a resource handler for the request path. This method cannot be called after the service has
+    /// been started. There are two special considerations for this method:
+    /// 1) The path provided must be the path to the single resource. For example, if your collection
+    ///    is books and it lives at "/user/{userId}/books", the single resource path would be something
+    ///    like "/user/{userId}/books/{bookId}".
+    /// 2) Internally, two routes are registered for a resource handler: one for the collection path and
+    ///    one for the individual resource path.
     /// </summary>
-    /// <param name="collectionPath">The collection path for the handler.
-    /// For example, if the resource type is jobs, the path could be "/prefix/jobs". </param>
-    /// <param name="handler">The handler to add.</param>
-    public void AddResourceHandler(string collectionPath, ResourceHandlerBase handler)
+    /// <param name="resourceHandler">The resource handler to add.</param>
+    /// <param name="singleResourcePath">The single resource path path for the handler.</param>
+    public void AddResourceHandler(SydneyResourceHandlerBase resourceHandler, string singleResourcePath)
     {
-        ArgumentNullException.ThrowIfNullOrWhiteSpace(collectionPath);
-        ArgumentNullException.ThrowIfNull(handler);
-
         if (this.runningTaskCompletionSource != null)
         {
-            throw new InvalidOperationException("Cannot add a handler after the service has been started.");
+            throw new InvalidOperationException(
+                "Cannot add a handler after the service has been started.");
         }
 
-        // Trim leading and trailing slashes from the path.
-        collectionPath = collectionPath.Trim('/');
-
-        // Internally, a resource handler registers two routes: one rest handler for
-        // the collection route and one rest handler for the resource route.
-        this.router.AddRoute(collectionPath, handler.CollectionHandler);
-        this.router.AddRoute($"{collectionPath}/{{id}}", handler.ResourceHandler);
+        this.router.AddResourceHandler(resourceHandler, singleResourcePath);
     }
 
     public void Dispose()

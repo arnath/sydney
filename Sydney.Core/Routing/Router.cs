@@ -1,157 +1,230 @@
-﻿namespace Sydney.Core.Routing
+﻿using System.Diagnostics.CodeAnalysis;
+using Sydney.Core.Handlers;
+
+namespace Sydney.Core.Routing;
+
+internal class Router
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
-
-    internal class Router
+    public Router()
     {
-        public const string EmptySegment = "/";
+        this.root = new PathNode(string.Empty);
+        this.handlerPaths = new List<string>();
+    }
 
-        private readonly RouteNode root;
-        private readonly List<string> routes;
+    /// <summary>
+    /// The root node of the routing tree. This node will never have a handler.
+    /// </summary>
+    private readonly PathNode root;
 
-        public Router()
+    /// <summary>
+    /// The list of registered handle paths. This is used exclusively to display routes when the
+    /// service starts.
+    /// </summary>
+    private readonly List<string> handlerPaths;
+
+    public IReadOnlyList<string> HandlerPaths
+    {
+        get { return this.handlerPaths; }
+    }
+
+    /// <summary>
+    /// Adds a handler by registering a route for the handler path.
+    /// </summary>
+    public void AddHandler(SydneyHandlerBase handler, string path)
+    {
+        string trimmedPath = TrimSlashes(path);
+        string[] segments = trimmedPath.Split('/');
+        this.AddRoute(handler, segments);
+        this.handlerPaths.Add(trimmedPath);
+    }
+
+    /// <summary>
+    /// Adds a resource handler by registering the handler twice, once for the resource route
+    /// and once for the collection route.
+    /// </summary>
+    /// <param name="handler"></param>
+    /// <param name="singleResourcePath"></param>
+    /// <exception cref="ArgumentException"></exception>
+    public void AddResourceHandler(SydneyResourceHandlerBase handler, string singleResourcePath)
+    {
+        string trimmedPath = TrimSlashes(singleResourcePath);
+        string[] segments = trimmedPath.Split('/');
+        if (!TryGetParameterName(segments[segments.Length - 1], out _))
         {
-            this.root = new RouteNode(EmptySegment);
-            this.routes = new List<string>();
+            throw new ArgumentException(
+                "The single resource path must end with a parameter.",
+                nameof(singleResourcePath));
         }
 
-        public IReadOnlyList<string> Routes
-        {
-            get { return this.routes; }
-        }
+        // The collection path is the resource path without the ID segment (the last one).
+        string[] collectionSegments = segments.Take(segments.Length - 1).ToArray();
 
-        public void AddRoute(string route, RestHandlerBase handler)
+        // We register the same handler for both the resource route and the collection route.
+        this.AddRoute(handler, segments);
+        this.AddRoute(handler, collectionSegments);
+        this.handlerPaths.Add(trimmedPath);
+        this.handlerPaths.Add(string.Join("/", collectionSegments));
+    }
+
+    public bool TryMatchPath(
+        string path,
+        [NotNullWhen(returnValue: true)] out MatchResult? match)
+    {
+        List<MatchResult> results = new List<MatchResult>();
+        match = null;
+        string trimmedPath = TrimSlashes(path);
+        string[] segments = trimmedPath.Split('/');
+
+        MatchPathRecursive(
+            this.root,
+            segments,
+            0,
+            new Dictionary<string, string>(),
+            results);
+
+        // The matching process can return more than one handler, if there's both
+        // a route with parameters and a more specific route registered for this path.
+        // In this case, we take the route with the least parameters.
+        match = results.OrderBy((r) => r.PathParameters.Count).FirstOrDefault();
+
+        return match != null;
+    }
+
+    internal void AddRoute(SydneyHandlerBase handler, string[] routeSegments)
+    {
+        HashSet<string> parameterNames = new HashSet<string>();
+        PathNode node = this.root;
+        for (int i = 0; i < routeSegments.Length; i++)
         {
-            // Check if there's already an existing handler for the same route
-            // (this will catch same route with different parameter names).
-            if (this.TryMatchRoute(route, out _))
+            string segment = routeSegments[i];
+
+            // The first segment can only be empty if the string is a single slash.
+            if (i > 0 && string.IsNullOrWhiteSpace(segment))
             {
-                throw new ArgumentException("There is already a registered handler for this route.", nameof(route));
+                throw new InvalidOperationException(
+                    "Route segments must be at least one non-whitespace character long.");
             }
 
-            // Trim leading and trailing slashes from the path.
-            route = route.Trim('/');
-
-            string[] segments = route.Split('/');
-            HashSet<string> parameterNames = new HashSet<string>();
-            RouteNode node = this.root;
-            for (int i = 0; i < segments.Length; i++)
+            if (TryGetParameterName(segment, out string? parameterName))
             {
-                string segment = segments[i];
-                if (string.IsNullOrWhiteSpace(segment))
+                if (parameterNames.Contains(parameterName))
                 {
-                    throw new InvalidOperationException("Route segments must be at least one non-whitespace character long.");
+                    throw new InvalidOperationException(
+                        $"The parameter {parameterName} is used twice in this route. Parameters must be unique.");
                 }
 
-                RouteNode child;
-                if (TryGetParameterName(segment, out string? parameterName))
+                parameterNames.Add(parameterName);
+                if (node.Parameter == null)
                 {
-                    // If this segment is a parameter, validate that the name is unique
-                    // and add a parameter node to the tree.
-                    if (parameterNames.Contains(parameterName))
-                    {
-                        throw new InvalidOperationException($"The parameter name {parameterName} is used twice in this route. Parameters must be unique.");
-                    }
-
-                    parameterNames.Add(parameterName);
-                    child = new ParameterRouteNode(segment, parameterName, node);
+                    node.Parameter = new PathNode(parameterName, node);
                 }
-                else
+                else if (parameterName != node.Parameter.Value)
                 {
-                    child = new RouteNode(segment, node);
+
+                    throw new InvalidOperationException(
+                        $"The parameter {parameterName} is attempting to rename an already existing parameter.");
                 }
 
-                node.Children.Add(child);
+                node = node.Parameter;
+            }
+            else
+            {
+                if (!node.Children.TryGetValue(segment, out PathNode? child))
+                {
+                    child = new PathNode(segment, node);
+                    node.Children[segment] = child;
+                }
+
                 node = child;
             }
-
-            // Add a handler node as a leaf below the last route node.
-            node.Children.Add(new HandlerRouteNode(handler, node));
-
-            // Add the new route to the list of registered routes.
-            this.routes.Add(route);
         }
 
-        public bool TryMatchRoute(string? path, out RouteMatch match)
+        if (node.Handler != null)
         {
-            match = default;
-            if (path == null)
-            {
-                return false;
-            }
-
-            path = path.Trim('/');
-
-            // Try to find a matching handler node for this path.
-            string[] segments = path.Split('/');
-            HandlerRouteNode? handlerNode = MatchPathRecursive(this.root, segments, -1);
-            if (handlerNode != null)
-            {
-                // If we found a handler, traverse back up the path to gather
-                // the path parameters.
-                Dictionary<string, string> pathParameters = new Dictionary<string, string>();
-                RouteNode? node = handlerNode.Parent;
-                int index = segments.Length - 1;
-                while (node != null)
-                {
-                    if (node is ParameterRouteNode parameterNode)
-                    {
-                        pathParameters.Add(parameterNode.ParameterName, segments[index]);
-                    }
-
-                    node = node.Parent;
-                    index--;
-                }
-
-                match = new RouteMatch(handlerNode.Handler, pathParameters);
-                return true;
-            }
-
-            return false;
+            throw new InvalidOperationException(
+                "There is already a handler registered for this path.");
         }
 
-        private static HandlerRouteNode? MatchPathRecursive(RouteNode node, string[] segments, int index)
+        node.Handler = handler;
+    }
+
+    private static void MatchPathRecursive(
+        PathNode node,
+        string[] segments,
+        int index,
+        Dictionary<string, string> pathParametersSoFar,
+        List<MatchResult> results)
+    {
+        // Recursively matches paths using a backtracking algorithm that keeps path parameters
+        // as it goes along.
+        if (index == segments.Length)
         {
-            if (node is HandlerRouteNode handlerNode && index == segments.Length)
+            // If we've reached the last segment, either there's a handler here or it's
+            // not a match.
+            if (node.Handler != null)
             {
-                // If we've reached a handler node and we're out of segments,
-                // we've found a matching handler.
-                return handlerNode;
-            }
-            else if (node is ParameterRouteNode || node.Parent == null || node.Segment.Equals(segments[index], StringComparison.OrdinalIgnoreCase))
-            {
-                // Recursively check the children if:
-                // 1) The node is a parameter (tentatively matches everything).
-                // 2) The node is the root (matches everything because it's a placeholder node).
-                // 3) The node matches the current segment.
-                foreach (RouteNode child in node.Children)
-                {
-                    HandlerRouteNode? childHandlerNode = MatchPathRecursive(child, segments, index + 1);
-                    if (childHandlerNode != null)
-                    {
-                        return childHandlerNode;
-                    }
-                }
+                results.Add(
+                    new MatchResult(
+                        node.Handler,
+                        new Dictionary<string, string>(pathParametersSoFar)));
             }
 
-            return null;
+            return;
         }
 
-        private static bool TryGetParameterName(
-            string segment,
-            [NotNullWhen(returnValue: true)] out string? parameterName)
+        string segment = segments[index];
+
+        // If there's a child with a matching segment value, recurse on that child.
+        if (node.Children.TryGetValue(segment, out PathNode? child))
         {
-            if (segment[0] == '{' && segment[segment.Length - 1] == '}')
-            {
-                parameterName = segment.Substring(1, segment.Length - 2);
-                return true;
-            }
-
-            parameterName = null;
-
-            return false;
+            MatchPathRecursive(
+                child,
+                segments,
+                index + 1,
+                pathParametersSoFar,
+                results);
         }
+
+        // Parameter nodes tentatively match everything. If there's a parameter child,
+        // recurse on that as well. Backtrack after recursion is finished.
+        if (node.Parameter != null)
+        {
+            pathParametersSoFar.Add(node.Parameter.Value, segment);
+            MatchPathRecursive(
+                node.Parameter,
+                segments,
+                index + 1,
+                pathParametersSoFar,
+                results);
+            pathParametersSoFar.Remove(node.Value);
+        }
+    }
+
+    private static bool TryGetParameterName(
+        string segment,
+        [NotNullWhen(returnValue: true)] out string? parameterName)
+    {
+        if (segment.Length > 2 && segment[0] == '{' && segment[segment.Length - 1] == '}')
+        {
+            parameterName = segment.Substring(1, segment.Length - 2);
+            return true;
+        }
+
+        parameterName = null;
+
+        return false;
+    }
+
+    private static string TrimSlashes(string route)
+    {
+        // Trim leading and trailing slashes from the route.
+        string result = route.Trim('/');
+        if (result == "/")
+        {
+            // If the route was just a single slash, Trim won't have removed it.
+            return string.Empty;
+        }
+
+        return result;
     }
 }

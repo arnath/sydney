@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Serilog;
 using Sydney.Core;
+using Sydney.Core.Handlers;
 
 public class Program
 {
@@ -16,19 +17,15 @@ public class Program
         ILoggerFactory loggerFactory =
             LoggerFactory.Create(
                 (builder) => builder.AddConsole().AddSerilog());
-        SydneyServiceConfig config =
-            SydneyServiceConfig.CreateHttp(
-                8080,
-                returnExceptionMessagesInResponse: true,
-                new AuthMiddleware());
+        SydneyServiceConfig config = new SydneyServiceConfig();
         using (SydneyService service = new SydneyService(loggerFactory, config))
         {
             // Routes can have path parameters by enclosing a name in braces.
-            service.AddRestHandler("/books/{id}", new BooksHandler());
+            service.AddHandler(new BooksHandler(), "/books/{id}");
 
             // Resource handlers register both the collection and individual resource URLs.
             // In this case, it registers /posts and /posts/{id}.
-            service.AddResourceHandler("/posts", new PostsHandler());
+            service.AddResourceHandler(new PostsHandler(), "/posts/{id}");
 
             // Blocks until Ctrl+C or SIGBREAK is received.
             await service.StartAsync();
@@ -61,12 +58,12 @@ public class Program
             return Task.CompletedTask;
         }
 
-        public override Task<SydneyResponse> PostHandlerHookAsync(SydneyRequest request, SydneyResponse response)
+        public override Task<SydneyResponse?> PostHandlerHookAsync(SydneyRequest request, SydneyResponse response)
         {
             // There's no reason to do this in an auth middleware but as an example,
             // middlewares can change the response in a post handler hook by returning
             // a new SydneyResponse.
-            return Task.FromResult(
+            return Task.FromResult<SydneyResponse?>(
                 new SydneyResponse(
                     HttpStatusCode.Processing,
                     new { Message = "Here's a new response" }));
@@ -75,7 +72,7 @@ public class Program
 
     // A resource handler inherits from ResourceHandlerBase and supports the 5 standard
     // operations as defined in Google's API Guidelines.
-    private class PostsHandler : ResourceHandlerBase
+    private class PostsHandler : SydneyResourceHandlerBase
     {
         private readonly List<dynamic> posts = new();
 
@@ -94,7 +91,7 @@ public class Program
         {
             // You can deserialize a request payload by calling request.DeserializeJsonAsync<T>().
             // This will deserialize a JSON payload into whatever type you have defined.
-            dynamic post = await request.DeserializeJsonAsync<dynamic>();
+            dynamic? post = await request.DeserializeJsonAsync<dynamic>();
             if (post == null)
             {
                 // Throwing an HttpResponseException (or subclass) from your handler will
@@ -126,7 +123,7 @@ public class Program
     // A rest handler inherits from RestHandlerBase and supports all the standard
     // HTTP methods. Other than this, the mechanisms are identical to a resource
     // handler.
-    private class BooksHandler : RestHandlerBase
+    private class BooksHandler : SydneyRestHandlerBase
     {
         private readonly List<dynamic> books = new();
 

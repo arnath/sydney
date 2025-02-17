@@ -1,12 +1,7 @@
-﻿namespace Sydney.Core;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+
+namespace Sydney.Core;
 
 /// <summary>
 /// Abstract class that represents a request sent to a Sydney service. This class
@@ -67,9 +62,14 @@ public abstract class SydneyRequest
     public abstract Stream PayloadStream { get; }
 
     /// <summary>
-    /// Gets the request path.
+    /// Gets the request path with leading and trailing slashes removed.
     /// </summary>
     public abstract string Path { get; }
+
+    /// <summary>
+    /// Gets a list of path segments with slashes removed.
+    /// </summary>
+    public abstract IList<string> PathSegments { get; }
 
     /// <summary>
     /// Deserializes the JSON request payload into the specified type. Throws

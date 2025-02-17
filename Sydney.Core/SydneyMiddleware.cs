@@ -1,7 +1,5 @@
 ﻿namespace Sydney.Core;
 
-using System.Threading.Tasks;
-
 /// <summary>
 /// Base class for middleware that can be added to a Sydney service. Provides
 /// hooks for pre and post handler processing. If either method is unimplemented

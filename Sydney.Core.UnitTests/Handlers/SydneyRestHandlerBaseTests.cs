@@ -1,12 +1,11 @@
-﻿namespace Sydney.Core.UnitTests;
-
-using System;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using FakeItEasy;
+using Sydney.Core.Handlers;
 using Xunit;
 
-public class RestHandlerBaseTests
+namespace Sydney.Core.UnitTests.Handlers;
+
+public class SydneyRestHandlerBaseTests
 {
     [Theory]
     [InlineData(HttpMethod.Get, "GetAsync")]
@@ -18,11 +17,8 @@ public class RestHandlerBaseTests
     [InlineData(HttpMethod.Options, "OptionsAsync")]
     public async Task HttpMethodMapsToCorrectHandlerMethodAsync(HttpMethod httpMethod, string handlerMethodName)
     {
-        // We use fakes to avoid defining dummy concrete classes.
-        SydneyRequest request = A.Fake<SydneyRequest>();
-        A.CallTo(() => request.HttpMethod).Returns(httpMethod);
-
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRequest request = new FakeSydneyRequest(httpMethod);
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler)
             .Where(call => call.Method.Name == handlerMethodName)
             .WithReturnType<Task<SydneyResponse>>()
@@ -37,14 +33,12 @@ public class RestHandlerBaseTests
     }
 
     [Fact]
-    public async Task UnsupportedHttpMethodThrowsNotImplementedException()
+    public async Task UnimplementedHandlerMethodThrowsNotImplementedException()
     {
-        SydneyRequest request = A.Fake<SydneyRequest>();
-        A.CallTo(() => request.HttpMethod).Returns(HttpMethod.Get);
+        SydneyRequest request = new FakeSydneyRequest();
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
-
-        _ = await Assert.ThrowsAsync<NotImplementedException>(
+        await Assert.ThrowsAsync<NotImplementedException>(
             () => handler.HandleRequestAsync(request));
     }
 }

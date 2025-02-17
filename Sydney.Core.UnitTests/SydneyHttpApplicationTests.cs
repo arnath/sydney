@@ -1,17 +1,14 @@
-﻿namespace Sydney.Core.UnitTests;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
 using FakeItEasy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging.Abstractions;
+using Sydney.Core.Handlers;
 using Sydney.Core.Routing;
 using Xunit;
+
+namespace Sydney.Core.UnitTests;
 
 public class SydneyHttpApplicationTests
 {
@@ -59,12 +56,12 @@ public class SydneyHttpApplicationTests
 
         SydneyResponse response = new SydneyResponse(HttpStatusCode.AlreadyReported);
         response.Headers.Add(new KeyValuePair<string, string>("foo", "bar"));
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(response));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -93,10 +90,11 @@ public class SydneyHttpApplicationTests
         context.Request.Method = "GET";
         context.Request.Path = new PathString("/foo/bar");
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        // All the unimplemented methods throw NotImplementedException.
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -117,11 +115,11 @@ public class SydneyHttpApplicationTests
         context.Request.Method = "GET";
         context.Request.Path = new PathString("/foo/bar");
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler).Where(call => call.Method.Name == "GetAsync").Throws(new Exception());
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -142,13 +140,13 @@ public class SydneyHttpApplicationTests
         context.Request.Method = "GET";
         context.Request.Path = new PathString("/foo/bar");
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler)
             .Where(call => call.Method.Name == "GetAsync")
             .Throws(new HttpResponseException(HttpStatusCode.EarlyHints));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -171,13 +169,13 @@ public class SydneyHttpApplicationTests
         context.Response.Body = new MemoryStream();
 
         string message = "here is a message";
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
         A.CallTo(handler)
             .Where(call => call.Method.Name == "GetAsync")
             .Throws(new Exception(message));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -212,12 +210,12 @@ public class SydneyHttpApplicationTests
         dynamic payload = new { Foo = "foo", Bar = "bar" };
         SydneyResponse response = new SydneyResponse(HttpStatusCode.AlreadyReported, payload);
         response.Headers.Add(new KeyValuePair<string, string>("foo", "bar"));
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(response));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -248,14 +246,14 @@ public class SydneyHttpApplicationTests
         context.Request.Method = "GET";
         context.Request.Path = new PathString("/foo/bar");
 
-        RestHandlerBase handler = A.Fake<RestHandlerBase>(options => options.CallsBaseMethods());
+        SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>(options => options.CallsBaseMethods());
 
         SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
         A.CallTo(() => middleware.PreHandlerHookAsync(A<SydneyRequest>.Ignored))
             .Throws(new Exception());
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -277,7 +275,7 @@ public class SydneyHttpApplicationTests
         context.Request.Path = new PathString("/foo/bar");
 
         SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(originalResponse));
 
@@ -286,7 +284,7 @@ public class SydneyHttpApplicationTests
             .Throws(new Exception());
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -308,17 +306,20 @@ public class SydneyHttpApplicationTests
         context.Request.Path = new PathString("/foo/bar");
 
         SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(originalResponse));
 
         SydneyResponse modifiedResponse = new SydneyResponse(HttpStatusCode.ExpectationFailed);
         SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
-        A.CallTo(() => middleware.PostHandlerHookAsync(A<SydneyRequest>.Ignored, A<SydneyResponse>.Ignored))
-            .Returns(Task.FromResult(modifiedResponse));
+        A.CallTo(
+            () => middleware.PostHandlerHookAsync(
+                A<SydneyRequest>.Ignored,
+                A<SydneyResponse>.Ignored))
+            .Returns(Task.FromResult<SydneyResponse?>(modifiedResponse));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(
@@ -340,17 +341,20 @@ public class SydneyHttpApplicationTests
         context.Request.Path = new PathString("/foo/bar");
 
         SydneyResponse originalResponse = new SydneyResponse(HttpStatusCode.AlreadyReported);
-        RestHandlerBase handler = A.Fake<RestHandlerBase>();
+        SydneyHandlerBase handler = A.Fake<SydneyHandlerBase>();
         A.CallTo(() => handler.HandleRequestAsync(A<SydneyRequest>.Ignored))
             .Returns(Task.FromResult(originalResponse));
 
         SydneyResponse modifiedResponse = new SydneyResponse(HttpStatusCode.ExpectationFailed);
         SydneyMiddleware middleware = A.Fake<SydneyMiddleware>(options => options.CallsBaseMethods());
-        A.CallTo(() => middleware.PostHandlerHookAsync(A<SydneyRequest>.Ignored, A<SydneyResponse>.Ignored))
-            .Returns(Task.FromResult<SydneyResponse>(null));
+        A.CallTo(
+            () => middleware.PostHandlerHookAsync(
+                A<SydneyRequest>.Ignored,
+                A<SydneyResponse>.Ignored))
+            .Returns(Task.FromResult<SydneyResponse?>(null));
 
         Router router = new Router();
-        router.AddRoute("/foo/bar", handler);
+        router.AddHandler(handler, "/foo/bar");
 
         SydneyHttpApplication httpApplication =
             new SydneyHttpApplication(

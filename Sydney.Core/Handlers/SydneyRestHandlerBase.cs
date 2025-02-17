@@ -1,25 +1,24 @@
-﻿namespace Sydney.Core;
+﻿using System.Net;
 
-using System;
-using System.Threading.Tasks;
+namespace Sydney.Core.Handlers;
 
 /// <summary>
 /// Base class for a standard REST based handler. Provides handler hooks for
 /// the standard REST HTTP methods: GET, POST, DELETE, PUT, HEAD, PATCH, and OPTIONS.
 ///
-/// It's recommended that you use <see cref="ResourceHandlerBase"/> instead of this
+/// It's recommended that you use <see cref="SydneyResourceHandlerBase"/> instead of this
 /// because it forces you to use better semantics when creating your API. Also, if
 /// you use this class, the collection URL and individual item URL need to be registered
 /// as separate handlers.
 /// </summary>
-public abstract class RestHandlerBase
+public abstract class SydneyRestHandlerBase : SydneyHandlerBase
 {
     /// <summary>
-    /// Handles the request asynchronously based on the HTTP method.
+    /// Handles a REST request asynchronously based on the HTTP method.
     /// </summary>
     /// <param name="request">The incoming request.</param>
     /// <returns>A task that represents the asynchronous operation, with the response.</returns>
-    internal virtual Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
+    public sealed override Task<SydneyResponse> HandleRequestAsync(SydneyRequest request)
     {
         switch (request.HttpMethod)
         {
@@ -45,7 +44,7 @@ public abstract class RestHandlerBase
                 return this.OptionsAsync(request);
         }
 
-        throw new NotImplementedException();
+        throw new HttpResponseException(HttpStatusCode.MethodNotAllowed);
     }
 
     /// <summary>
