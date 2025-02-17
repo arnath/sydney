@@ -46,7 +46,12 @@ public class SydneyService : IDisposable
         this.router = new Router();
 
         // Listen on any IP on the configured port. Use HTTPs if specified.
-        KestrelServerOptions serverOptions = new KestrelServerOptions();
+        ServiceCollection collection = new ServiceCollection();
+        KestrelServerOptions serverOptions = new KestrelServerOptions()
+        {
+            ApplicationServices = collection.BuildServiceProvider(),
+        };
+
         serverOptions.ListenAnyIP(
             config.Port,
             (listenOptions) =>

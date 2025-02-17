@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
@@ -15,30 +16,39 @@ public class Program
 {
     public static async Task Main()
     {
-        // Router router = new Router();
-        // router.AddRoute("/", new BooksHandler());
-        // Console.WriteLine(router.TryMatchRoute("/", out RouteMatch match));
-        // ILoggerFactory loggerFactory =
-        //     LoggerFactory.Create(
-        //         (builder) => builder.AddConsole().AddSerilog());
-        // SydneyServiceConfig config =
-        //     SydneyServiceConfig.CreateHttp(
-        //         8080,
-        //         returnExceptionMessagesInResponse: true,
-        //         new AuthMiddleware());
-        // using (SydneyService service = new SydneyService(loggerFactory, config))
-        // {
-        //     service.AddRestHandler("/", new BooksHandler());
-        //     // // Routes can have path parameters by enclosing a name in braces.
-        //     // service.AddRestHandler("/books/{id}", new BooksHandler());
+        ILoggerFactory loggerFactory =
+            LoggerFactory.Create(
+                (builder) => builder.AddConsole().AddSerilog());
+        X509Certificate2 certificate = new X509Certificate2(File.ReadAllBytes("cert.pem"));
+        SydneyServiceConfig config =
+            SydneyServiceConfig.CreateHttps(
+                certificate,
+                port: 8000,
+                returnExceptionMessagesInResponse: true);
+        using (SydneyService service = new SydneyService(loggerFactory, config))
+        {
+            service.AddHandler(new ProxyHandler(), "/");
+            // // Routes can have path parameters by enclosing a name in braces.
+            // service.AddRestHandler("/books/{id}", new BooksHandler());
 
-        //     // // Resource handlers register both the collection and individual resource URLs.
-        //     // // In this case, it registers /posts and /posts/{id}.
-        //     // service.AddResourceHandler("/posts", new PostsHandler());
+            // // Resource handlers register both the collection and individual resource URLs.
+            // // In this case, it registers /posts and /posts/{id}.
+            // service.AddResourceHandler("/posts", new PostsHandler());
 
-        //     // // Blocks until Ctrl+C or SIGBREAK is received.
-        //     // await service.StartAsync();
-        // }
+            // // Blocks until Ctrl+C or SIGBREAK is received.
+            await service.StartAsync();
+        }
+    }
+
+    private class ProxyHandler : SydneyRestHandlerBase
+    {
+        public override async Task<SydneyResponse> GetAsync(SydneyRequest request)
+        {
+            Console.WriteLine(request.Path);
+            Console.WriteLine(string.Join("\n", request.Headers.Select((kvp) => $"{kvp.Key}={kvp.Value}")));
+
+            return new SydneyResponse(HttpStatusCode.OK);
+        }
     }
 
     // Middleware can be added to the service to perform pre and post handler processing.
