@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Sydney.Core.UnitTests.Handlers;
 
-public class ResourceHandlerBaseTests
+public class SydneyResourceHandlerBaseTests
 {
     [Theory]
     [InlineData(HttpMethod.Get, "/books/123", "GetAsync")]
