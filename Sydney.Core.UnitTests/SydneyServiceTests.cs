@@ -13,7 +13,7 @@ public class SydneyServiceTests
     {
         ArgumentNullException exception =
             Assert.Throws<ArgumentNullException>(
-                () => new SydneyService(null, SydneyServiceConfig.CreateHttp()));
+                () => new SydneyService(null, new SydneyServiceConfig(80)));
         Assert.Equal("loggerFactory", exception.ParamName);
     }
 
@@ -31,7 +31,6 @@ public class SydneyServiceTests
     public void ConstructorCallsValidateOnConfig()
     {
         SydneyServiceConfig config = A.Fake<SydneyServiceConfig>();
-        config.UseHttps = false;
         config.Port = 80;
 
         SydneyService service = new SydneyService(NullLoggerFactory.Instance, config);
@@ -44,7 +43,7 @@ public class SydneyServiceTests
     {
         SydneyService service = new SydneyService(
             NullLoggerFactory.Instance,
-            SydneyServiceConfig.CreateHttp());
+            new SydneyServiceConfig(80));
 
         // Don't await start because it never returns.
         _ = service.StartAsync();
@@ -62,7 +61,7 @@ public class SydneyServiceTests
     {
         SydneyService service = new SydneyService(
             NullLoggerFactory.Instance,
-            SydneyServiceConfig.CreateHttp());
+            new SydneyServiceConfig(80));
 
         InvalidOperationException exception =
             await Assert.ThrowsAsync<InvalidOperationException>(service.StopAsync);
@@ -77,7 +76,7 @@ public class SydneyServiceTests
         SydneyRestHandlerBase handler = A.Fake<SydneyRestHandlerBase>();
         SydneyService service = new SydneyService(
             NullLoggerFactory.Instance,
-            SydneyServiceConfig.CreateHttp());
+            new SydneyServiceConfig(80));
 
         // Don't await start because it never returns.
         _ = service.StartAsync();

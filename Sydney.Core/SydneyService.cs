@@ -46,21 +46,8 @@ public class SydneyService : IDisposable
         this.router = new Router();
 
         // Listen on any IP on the configured port. Use HTTPs if specified.
-        ServiceCollection collection = new ServiceCollection();
-        KestrelServerOptions serverOptions = new KestrelServerOptions()
-        {
-            ApplicationServices = collection.BuildServiceProvider(),
-        };
-
-        serverOptions.ListenAnyIP(
-            config.Port,
-            (listenOptions) =>
-                {
-                    if (config.UseHttps)
-                    {
-                        listenOptions.UseHttps(config.HttpsServerCertificate!);
-                    }
-                });
+        KestrelServerOptions serverOptions = new KestrelServerOptions();
+        serverOptions.ListenAnyIP(config.Port);
 
         // Create connection factory.
         SocketTransportFactory socketTransportFactory =
@@ -91,8 +78,7 @@ public class SydneyService : IDisposable
         this.runningTaskCompletionSource = new TaskCompletionSource();
 
         this.logger.LogInformation(
-            "Listening on {Scheme}://0.0.0.0:{Port}, press Ctrl-C to stop ...",
-            config.UseHttps ? "https" : "http",
+            "Listening on http://0.0.0.0:{Port}, press Ctrl-C to stop ...",
             config.Port);
         foreach (string path in this.router.HandlerPaths)
         {
