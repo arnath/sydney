@@ -88,4 +88,20 @@ public class SydneyServiceTests
             "Cannot add a handler after the service has been started.",
             exception.Message);
     }
+
+    [Fact]
+    public void AddHandlerThrowsArgumentExceptionWhenHandlerIsResourceHandler()
+    {
+        SydneyResourceHandlerBase handler = A.Fake<SydneyResourceHandlerBase>();
+        SydneyService service = new SydneyService(
+            NullLoggerFactory.Instance,
+            new SydneyServiceConfig());
+
+        Exception exception = Assert.Throws<ArgumentException>(
+            () => service.AddHandler(handler, "/foo/bar"));
+
+        Assert.Equal(
+            "AddHandler cannot be called with an instance of SydneyResourceHandlerBase. (Parameter 'handler')",
+            exception.Message);
+    }
 }
