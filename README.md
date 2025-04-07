@@ -29,7 +29,7 @@ To configure Sydney, create an instance of `SydneyServiceConfig`. It allows you 
 following properties:
 
 - `ushort Port`: Port for the server.
-- 'bool ReturnExceptionMessagesInResponse': Indicates whether to return exception messages in error
+- `bool ReturnExceptionMessagesInResponse`: Indicates whether to return exception messages in error
   responses.
 - `IList<SydneyMiddleware> Middlewares`: Optional list of [middlewares](#middlewares) for the
   service.
