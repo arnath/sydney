@@ -19,7 +19,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 A.Fake<Router>(),
-                new List<SydneyMiddleware>(),
+                [],
                 false);
 
         IFeatureCollection contextFeatures = A.Fake<IFeatureCollection>();
@@ -39,7 +39,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>(),
+                [],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -67,7 +67,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>(),
+                [],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -100,7 +100,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>(),
+                [],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -125,7 +125,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>(),
+                [],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -152,7 +152,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>(),
+                [],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -181,7 +181,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>(),
+                [],
                 true);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -221,7 +221,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>(),
+                [],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -259,7 +259,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>() { middleware },
+                [middleware],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -290,7 +290,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>() { middleware },
+                [middleware],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -325,7 +325,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>() { middleware },
+                [middleware],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);
@@ -360,7 +360,7 @@ public class SydneyHttpApplicationTests
             new SydneyHttpApplication(
                 NullLoggerFactory.Instance,
                 router,
-                new List<SydneyMiddleware>() { middleware },
+                [middleware],
                 false);
 
         await httpApplication.ProcessRequestAsync(context);

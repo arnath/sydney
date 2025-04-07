@@ -15,7 +15,7 @@ public class SydneyServiceConfig
     {
         this.Port = port;
         this.ReturnExceptionMessagesInResponse = returnExceptionMessagesInResponse;
-        this.Middlewares = new List<SydneyMiddleware>(middlewares);
+        this.Middlewares = [.. middlewares];
     }
 
     /// <summary>

@@ -8,7 +8,7 @@ internal class Router
     public Router()
     {
         this.root = new PathNode(string.Empty);
-        this.handlerPaths = new List<string>();
+        this.handlerPaths = [];
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ internal class Router
         string path,
         [NotNullWhen(returnValue: true)] out MatchResult? match)
     {
-        List<MatchResult> results = new List<MatchResult>();
+        List<MatchResult> results = [];
         match = null;
         string trimmedPath = TrimSlashes(path);
         string[] segments = trimmedPath.Split('/');
